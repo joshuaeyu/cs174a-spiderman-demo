@@ -14,7 +14,9 @@ class Assignment_Four_Scene extends Scene_Component
       const shapes = { 
       		ground:		new Cube(),
       		building:   new Cube(),
-      		boundary: 	new Cube()
+      		boundary: 	new Cube(),
+      		spiderman:  new Cube(),
+      		AABB: new Cube()
       }
       this.submit_shapes( context, shapes );
 
@@ -22,16 +24,21 @@ class Assignment_Four_Scene extends Scene_Component
       { tan:   context.get_instance( Phong_Shader ).material( Color.of( 1,0.87,0.68,1 ) ),		// Color: Navajowhite
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
-      	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) )
+      	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
+      	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,0 ) )
       }
 
       //this.lights = [ new Light( Vec.of( -5,5,5,1 ), Color.of( 1,1,1,1 ), 100000 ) ];
 		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
 
+	  this.spidermanUnscaledPosMatrix = Mat4.identity();
     }
     make_control_panel()
     { // Takes user input for button presses
-        
+        this.key_triggered_button( "Move Forward", [ "i" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,-1])); } );
+        this.key_triggered_button( "Rotate Left", [ "j" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(0.25, [0,1,0])); } );
+        this.key_triggered_button( "Move Backward", [ "k" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,1])); } );
+        this.key_triggered_button( "Rotate Right", [ "l" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(-0.25, [0,1,0])); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -76,13 +83,31 @@ class Assignment_Four_Scene extends Scene_Component
       this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-1,12,-13)).times(Mat4.scale(Vec.of(4,13,2))), this.materials.tan);
       */
 
-	  
 	  // Simple Model
+	  /*
 	  var i, j;
 	  for (i = -40; i < 50; i+=10)
 	  	for (j = -40; j < 50; j+=10)
 	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
+	  */
+	  
+	  const spidermanPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.scale([2,1,1]));
+	  
+	  //draw stuff
+	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
+	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
 
+	  //create AABBs
+	  const buildingAABB = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingPosMatrix);
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
+
+	  //potentially change AABB color to red if AABBs intersect
+	  this.materials.AABB.color = AABB.doAABBsIntersect(buildingAABB, spidermanAABB)? Color.of(1,0,0,0.5) : Color.of(0,0,0,0);
+	 
+	  //draw AABBs
+	  this.shapes.AABB.draw( graphics_state, buildingAABB.getTransformMatrix(), this.materials.AABB );
+	  this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
     }
 }
 
