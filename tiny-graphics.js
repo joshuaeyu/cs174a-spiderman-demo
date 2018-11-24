@@ -611,6 +611,9 @@ class Canvas_Widget                    // Canvas_Widget embeds a WebGL demo onto
     { if( !scenes.every( x => window[ x ] ) )         // Make sure each scene class really exists.
         throw "(Featured class not found)";
       const canvas = element.appendChild( document.createElement( "canvas" ) );
+        // -*-*-*-*-*-*-*-*- INSERTED BY JOSH -*-*-*-*-*-*-*-*-
+      canvas.setAttribute("id", "canvas1");
+        // -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
       const control_panels = element.appendChild( document.createElement( "table" ) );
       control_panels.className = "control-box";      
       if( !show_controls ) control_panels.style.display = "none";
