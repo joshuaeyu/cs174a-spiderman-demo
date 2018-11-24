@@ -32,13 +32,15 @@ class Assignment_Four_Scene extends Scene_Component
 		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
 
 	  this.spidermanUnscaledPosMatrix = Mat4.identity();
+	  this.move_scale = 5;
+	  this.var_list = [false, false, false, false];
     }
     make_control_panel()
     { // Takes user input for button presses
-        this.key_triggered_button( "Move Forward", [ "i" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,-1])); } );
-        this.key_triggered_button( "Rotate Left", [ "j" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(0.25, [0,1,0])); } );
-        this.key_triggered_button( "Move Backward", [ "k" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,1])); } );
-        this.key_triggered_button( "Rotate Right", [ "l" ], () => { this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(-0.25, [0,1,0])); } );
+        this.key_triggered_button( "Move Forward", [ "i" ], () => this.var_list[0] = true, undefined, () => this.var_list[0] = false );
+        this.key_triggered_button( "Rotate Left", [ "j" ], () => this.var_list[1] = true, undefined, () => this.var_list[1] = false );
+        this.key_triggered_button( "Move Backward", [ "k" ], () => this.var_list[2] = true, undefined, () => this.var_list[2] = false );
+        this.key_triggered_button( "Rotate Right", [ "l" ], () => this.var_list[3] = true, undefined, () => this.var_list[3] = false );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -91,8 +93,17 @@ class Assignment_Four_Scene extends Scene_Component
 	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
 	  */
 	  
-	  const spidermanPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.scale([2,1,1]));
+	  if (this.var_list[0])
+	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,-this.move_scale * dt]));
+	  if (this.var_list[1])
+	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(Math.PI * dt, [0,1,0]));
+	  if (this.var_list[2])
+	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation(Vec.of(0,0,this.move_scale * dt)));
+	  if (this.var_list[3])
+	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(-Math.PI * dt, [0,1,0]));
 	  
+	  const spidermanPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.scale([2,1,1]));
+
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
 	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
