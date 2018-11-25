@@ -19,7 +19,7 @@ class Camera
                                       camera_Mat:            Mat4.identity(),         // Camera transform
                                       camera_PosVec:         Vec.of(0,0,0)            /* Camera's absolute position vector */ } } );
     // Constant default Spiderman-to-camera ("S-to-C") vector (looks forward)
-    Object.defineProperty( this, 'defaultSToC', { value: Vec.of(0,6,11),  writable: false } );
+    Object.defineProperty( this, 'defaultSToC', { value: Vec.of(0,3,15),  writable: false } );
     // Assign real initial values and push to gs
     this.locals.spiderman_PosVec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
     this.locals.spidermanToCamera_Vec = this.defaultSToC;
@@ -32,10 +32,12 @@ class Camera
     let dX = mouseEvent.movementX, dY = mouseEvent.movementY;
     if ( dX == 0 && dY == 0 ) // Do nothing if mouse isn't moved
       return;
-
+    
     // Rotate vector connecting Spiderman position and camera position
-    dY = this.locals.spidermanToCamera_Vec.dot(Vec.of(0,0,-1)) > 0 ? -dY : dY; // If the camera is in front of Spiderman, invert rotation about the x-axis
-    this.locals.spidermanToCamera_Vec = Mat4.rotation( Math.sqrt(dX**2+dY**2)/50, Vec.of(-dY,-dX,0) ).times( this.locals.spidermanToCamera_Vec.to4(1) ).to3();  
+    let sensitivity = 5;
+    let axis = this.locals.spidermanToCamera_Vec.mult_pairs(Vec.of(1,0,1)).cross(Vec.of(0,-1,0)).normalized().times(-dY) // Calculate x-z component
+                                                .plus(Vec.of(0,-dX,0)); // Add y component
+    this.locals.spidermanToCamera_Vec = Mat4.rotation( Math.sqrt(dX**2+dY**2)/250*sensitivity, axis ).times( this.locals.spidermanToCamera_Vec.to4(1) ).to3();  
       
     // Determine camera position and camera transform, then push to gs
     let y_mult = this.locals.spidermanToCamera_Vec.dot(Vec.of(0,-1,0)) > 0 ? 0 : 1; // If the camera is below the ground, force camera's y-coordinate to 0.

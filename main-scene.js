@@ -117,11 +117,11 @@ class Assignment_Four_Scene extends Scene_Component
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
 	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
-	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,-1,0])), this.materials.tan);
 
 	  //create AABBs
 	  const buildingAABB = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingPosMatrix);
-	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix.times(Mat4.translation([0,-1,0])));
 
 	  //potentially change AABB color to red if AABBs intersect
 	  this.materials.AABB.color = AABB.doAABBsIntersect(buildingAABB, spidermanAABB)? Color.of(1,0,0,0.5) : Color.of(0,0,0,0);

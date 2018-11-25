@@ -29,19 +29,18 @@ class Spiderman
       case ("right"):    rotation_mult = 3; break;
     }
     // Calculate Spiderman movement (translation) vector according to input direction and current camera orientation
-    let camera_xz_orientation = this.camera.locals.spidermanToCamera_Vec.mult_pairs( Vec.of(-1,0,-1) ).normalized();  // Unit vector
-    let movement_vector = Mat4.rotation( Math.PI/2*rotation_mult, Vec.of(0,1,0) ).times( camera_xz_orientation.to4(1) ).to3();  // Unit vector
-    // Rotate Spiderman from current orientation to face in direction of movement vector if direction = "forward",
-    // otherwise translate according to movement vector without rotation
+    let camera_xz_orientation = this.camera.locals.spidermanToCamera_Vec.mult_pairs( Vec.of(-1,0,-1) ).normalized();  // Unit vector, relative to Spiderman's current orientation
+    let movement_vector = Mat4.rotation( Math.PI/2*rotation_mult, Vec.of(0,1,0) ).times( camera_xz_orientation.to4(1) ).to3();  // Unit vector, relative to camera_xz_orientation
+    
+    // Rotate Spiderman to face input direction, then move in that direction.
     let theta = 0;
-    if ( direction == "forward" ) {
-      let cross_product = Vec.of(0,0,-1).cross( movement_vector );
-      let dot_product = Vec.of(0,0,-1).dot( movement_vector );
-      theta = Math.acos( dot_product ) * cross_product.dot( Vec.of(0,1,0) ); // Theta becomes negative if movement_vector is CW of spiderman_orientation
-      this.rotate( theta );
-      movement_vector = Vec.of(0,0,-1);
-    }
-    this.model_transform = this.model_transform.times( Mat4.translation(movement_vector).times(distance) );
+    let cross_product = Vec.of(0,0,-1).cross( movement_vector ),
+        dot_product = Vec.of(0,0,-1).dot( movement_vector );
+    let rot_direction = cross_product.dot( Vec.of(0,1,0) ) > 0 ? 1 : -1;
+    theta = Math.acos( dot_product ) * rot_direction; // Theta becomes negative if movement_vector is CW of spiderman_orientation
+    this.rotate( theta );
+    this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-1)).times(distance) );
+    
     // Update camera transform
     this.camera.update_translate( this.model_transform );
   }
