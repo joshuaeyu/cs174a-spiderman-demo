@@ -10,16 +10,18 @@ class Spiderman
 {
   constructor( graphics_state )
   {
-    Object.assign( this, { model_transform: Mat4.translation([0,1,0]), camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ) } );
+    Object.assign( this, { model_transform: Mat4.translation([0,1,0]), camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
+                           gs: graphics_state } );
+    this.VELOCITY = 10; // Adjustable
   }
-  physics_move( displacement_Vec, distance = 1 )
+  physics_move( displacement_Vec, distance = this.VELOCITY * this.gs.animation_delta_time/1000 )
   {
     this.model_transform = this.model_transform.times( Mat4.translation( displacement_Vec.times(distance) ) );
     this.camera.update_translate( this.model_transform );
   }
   keyboard_move( direction )
   {
-    let distance = 1; // Adjustable
+    let distance = this.VELOCITY * this.gs.animation_delta_time / 1000; 
     let rotation_mult = 0;
     switch ( direction )
     {
@@ -39,7 +41,7 @@ class Spiderman
     let rot_direction = cross_product.dot( Vec.of(0,1,0) ) > 0 ? 1 : -1;
     theta = Math.acos( dot_product ) * rot_direction; // Theta becomes negative if movement_vector is CW of spiderman_orientation
     this.rotate( theta );
-    this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-1)).times(distance) );
+    this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-distance) ) );
     
     // Update camera transform
     this.camera.update_translate( this.model_transform );

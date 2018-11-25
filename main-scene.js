@@ -17,7 +17,7 @@ class Assignment_Four_Scene extends Scene_Component
       		building:   new Cube(),
       		boundary: 	new Cube(),
       		spiderman:  new Cube(),
-      		AABB: new Cube(),
+      		AABB: new Cube()
       }
       this.submit_shapes( context, shapes );
 
@@ -40,17 +40,20 @@ class Assignment_Four_Scene extends Scene_Component
 	  document.body.addEventListener( "mousemove", (m) => { 
 	  	if(document.pointerLockElement === document.getElementById("canvas1"))
 	  		this.spiderman.camera_update_rotate( m ); } );
+
+	  // JOSH - Implement Minsoo's smooth motion
+	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
     }
     make_control_panel()
     { // Takes user input for button presses
-        this.key_triggered_button( "Move Forward", [ "i" ], () => { 
-        	this.spiderman.keyboard_move( "forward" ); } );
-        this.key_triggered_button( "Strafe Left", [ "j" ], () => { 
-        	this.spiderman.keyboard_move( "left" ); } );
-        this.key_triggered_button( "Move Backward", [ "k" ], () => { 
-        	this.spiderman.keyboard_move( "backward" ); } );
-        this.key_triggered_button( "Strafe Right", [ "l" ], () => { 
-        	this.spiderman.keyboard_move( "right" ); } );
+        this.key_triggered_button( "Move Forward", [ "i" ], () => this.movement_directions.forward = true, undefined, 
+        													() => this.movement_directions.forward = false );
+        this.key_triggered_button( "Move Left", [ "j" ], () => this.movement_directions.left = true, undefined, 
+        												 () => this.movement_directions.left = false );
+        this.key_triggered_button( "Move Backward", [ "k" ], () => this.movement_directions.backward = true, undefined, 
+        													 () => this.movement_directions.backward = false );
+        this.key_triggered_button( "Move Right", [ "l" ], () => this.movement_directions.right = true, undefined, 
+        												  () => this.movement_directions.right = false );
        	// JOSH - Toggle "map" view
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { 
 			this.spiderman.camera_toggle_birdseye(); } );
@@ -113,6 +116,16 @@ class Assignment_Four_Scene extends Scene_Component
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0]))
 	  															 		 .times(Mat4.scale(1,1,1));
+	  
+	  // Check input and move Spiderman each frame
+	  if (this.movement_directions.forward)
+	  	this.spiderman.keyboard_move("forward");
+	  if (this.movement_directions.backward)
+	  	this.spiderman.keyboard_move("backward");
+	  if (this.movement_directions.left)
+	  	this.spiderman.keyboard_move("left");
+	  if (this.movement_directions.right)
+	  	this.spiderman.keyboard_move("right");
 
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
