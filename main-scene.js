@@ -17,7 +17,7 @@ class Assignment_Four_Scene extends Scene_Component
       		building:   new Cube(),
       		boundary: 	new Cube(),
       		spiderman:  new Cube(),
-      		AABB: new Cube()
+      		AABB: 		new Cube()
       }
       this.submit_shapes( context, shapes );
 
@@ -26,7 +26,7 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
-      	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,0 ) )
+      	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.5) ),
       }
 
       //this.lights = [ new Light( Vec.of( -5,5,5,1 ), Color.of( 1,1,1,1 ), 100000 ) ];
@@ -111,20 +111,10 @@ class Assignment_Four_Scene extends Scene_Component
 	  	for (j = -40; j < 50; j+=10)
 	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
 	  */
-	  
+
 	  // JOSH - Use model transform stored in Spiderman object.
-	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,.5]));
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
-	  
-	  // Check input and move Spiderman each frame
-	  if (this.movement_directions.forward)
-	  	this.spiderman.keyboard_move("forward");
-	  if (this.movement_directions.backward)
-	  	this.spiderman.keyboard_move("backward");
-	  if (this.movement_directions.left)
-	  	this.spiderman.keyboard_move("left");
-	  if (this.movement_directions.right)
-	  	this.spiderman.keyboard_move("right");
 
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
@@ -141,6 +131,47 @@ class Assignment_Four_Scene extends Scene_Component
 	  //draw AABBs
 	  this.shapes.AABB.draw( graphics_state, buildingAABB.getTransformMatrix(), this.materials.AABB );
 	  this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
+
+	  // Check input and move Spiderman for the next frame
+	  const gapCollisionDetection = true;
+	  for (let dirString in this.movement_directions) {
+	  	if (gapCollisionDetection) {
+			if (this.movement_directions[dirString]) {
+				const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,.5])).times(Mat4.translation([0,-1,0]));
+				const future_AABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, next_transform);
+				if (!AABB.doAABBsIntersect(future_AABB, buildingAABB))
+				{
+					this.spiderman.keyboard_move(dirString);
+				}
+	  		}
+	  	}
+	  	else {
+			if (this.movement_directions[dirString]) {
+				if (AABB.doAABBsIntersect(spidermanAABB, buildingAABB)) {
+					const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,.5])).times(Mat4.translation([0,-1,0]));
+					const future_AABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, next_transform);
+					if (!AABB.doAABBsIntersect(future_AABB, buildingAABB))
+					{
+						this.spiderman.keyboard_move(dirString);
+					}
+				}
+				else {
+					this.spiderman.keyboard_move(dirString);
+				}
+			}	
+	  	}
+	  }
+
+	  /*
+	  if (this.movement_directions.forward)
+	  	this.spiderman.keyboard_move("forward");
+	  if (this.movement_directions.backward)
+	  	this.spiderman.keyboard_move("backward");
+	  if (this.movement_directions.left)
+	  	this.spiderman.keyboard_move("left");
+	  if (this.movement_directions.right)
+	  	this.spiderman.keyboard_move("right");
+	*/
     }
 }
 
