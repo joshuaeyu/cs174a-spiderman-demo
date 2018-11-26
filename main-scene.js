@@ -5,8 +5,9 @@ class Assignment_Four_Scene extends Scene_Component
       if( !context.globals.has_controls   ) 
           context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) ); 
 
-      context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( -25,100,100 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
+      //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( -25,100,100 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
       //context.globals.graphics_state.camera_transform = Mat4.look_at( Vec.of( 15,0,0 ), Vec.of( 0,0,0 ), Vec.of( 0,1,0 ) );
+	  // JOSH - graphics_state.camera_transform is initialized and updated within this.spiderman's camera object (this.spiderman.camera)
 
       const r = context.width/context.height;
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
@@ -30,17 +31,35 @@ class Assignment_Four_Scene extends Scene_Component
 
       //this.lights = [ new Light( Vec.of( -5,5,5,1 ), Color.of( 1,1,1,1 ), 100000 ) ];
 		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+	
+	  // JOSH - Spiderman object
+	  this.spiderman = new Spiderman( context.globals.graphics_state );	
 
-	  this.spidermanUnscaledPosMatrix = Mat4.identity();
-	  this.move_scale = 5;
-	  this.var_list = [false, false, false, false];
+	  // JOSH - Pointer capture and mouse tracking
+	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
+	  document.body.addEventListener( "mousemove", (m) => { 
+	  	if(document.pointerLockElement === document.getElementById("canvas1"))
+	  		this.spiderman.camera_swivel( m ); } );
+
+	  // JOSH - Implement Minsoo's smooth motion
+	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
     }
     make_control_panel()
     { // Takes user input for button presses
-        this.key_triggered_button( "Move Forward", [ "i" ], () => this.var_list[0] = true, undefined, () => this.var_list[0] = false );
-        this.key_triggered_button( "Rotate Left", [ "j" ], () => this.var_list[1] = true, undefined, () => this.var_list[1] = false );
-        this.key_triggered_button( "Move Backward", [ "k" ], () => this.var_list[2] = true, undefined, () => this.var_list[2] = false );
-        this.key_triggered_button( "Rotate Right", [ "l" ], () => this.var_list[3] = true, undefined, () => this.var_list[3] = false );
+        this.key_triggered_button( "Move Forward", [ "i" ], () => this.movement_directions.forward = true, undefined, 
+        													() => this.movement_directions.forward = false );
+        this.key_triggered_button( "Move Left", [ "j" ], () => this.movement_directions.left = true, undefined, 
+        												 () => this.movement_directions.left = false );
+        this.key_triggered_button( "Move Backward", [ "k" ], () => this.movement_directions.backward = true, undefined, 
+        													 () => this.movement_directions.backward = false );
+        this.key_triggered_button( "Move Right", [ "l" ], () => this.movement_directions.right = true, undefined, 
+        												  () => this.movement_directions.right = false );
+       	// JOSH - Toggle "map" view
+    	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { 
+			this.spiderman.camera_toggle_birdseye(); } );
+		// JOSH - Turn camera to Spiderman's forward direction
+		this.key_triggered_button( "Look forward", ["v"], () => {
+			this.spiderman.camera_look_forward(); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -93,25 +112,28 @@ class Assignment_Four_Scene extends Scene_Component
 	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
 	  */
 	  
-	  if (this.var_list[0])
-	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation([0,0,-this.move_scale * dt]));
-	  if (this.var_list[1])
-	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(Math.PI * dt, [0,1,0]));
-	  if (this.var_list[2])
-	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.translation(Vec.of(0,0,this.move_scale * dt)));
-	  if (this.var_list[3])
-	  	this.spidermanUnscaledPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.rotation(-Math.PI * dt, [0,1,0]));
+	  // JOSH - Use model transform stored in Spiderman object.
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
+	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
 	  
-	  const spidermanPosMatrix = this.spidermanUnscaledPosMatrix.times(Mat4.scale([2,1,1]));
+	  // Check input and move Spiderman each frame
+	  if (this.movement_directions.forward)
+	  	this.spiderman.keyboard_move("forward");
+	  if (this.movement_directions.backward)
+	  	this.spiderman.keyboard_move("backward");
+	  if (this.movement_directions.left)
+	  	this.spiderman.keyboard_move("left");
+	  if (this.movement_directions.right)
+	  	this.spiderman.keyboard_move("right");
 
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
 	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
-	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,-1,0])), this.materials.tan);
 
 	  //create AABBs
 	  const buildingAABB = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingPosMatrix);
-	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix.times(Mat4.translation([0,-1,0])));
 
 	  //potentially change AABB color to red if AABBs intersect
 	  this.materials.AABB.color = AABB.doAABBsIntersect(buildingAABB, spidermanAABB)? Color.of(1,0,0,0.5) : Color.of(0,0,0,0);
