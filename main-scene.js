@@ -39,7 +39,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
 	  document.body.addEventListener( "mousemove", (m) => { 
 	  	if(document.pointerLockElement === document.getElementById("canvas1"))
-	  		this.spiderman.camera_update_rotate( m ); } );
+	  		this.spiderman.camera_swivel( m ); } );
 
 	  // JOSH - Implement Minsoo's smooth motion
 	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
@@ -112,10 +112,9 @@ class Assignment_Four_Scene extends Scene_Component
 	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
 	  */
 	  
-	  // JOSH - Used model transform stored in Spiderman object.
+	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
-	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0]))
-	  															 		 .times(Mat4.scale(1,1,1));
+	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
 	  
 	  // Check input and move Spiderman each frame
 	  if (this.movement_directions.forward)

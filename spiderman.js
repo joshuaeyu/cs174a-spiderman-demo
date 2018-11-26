@@ -2,7 +2,7 @@
   // physics_move           - (Can be used for physics-based movement?)
   // keyboard_move          - Takes a direction input (i.e., through a key press) and updates Spiderman's and camera's transforms accordingly.
   // rotate                 - Rotate Spiderman without moving camera.
-  // camera_update_rotate   - Handle mouse movement using this.camera.update_rotate().
+  // camera_swivel          - Handle mouse movement using this.camera.swivel().
   // camera_toggle_birdseye - Toggles minimap (overhead) view through this.camera.
   // camera_look_forward    - Force camera to look at Spiderman's forward direction.
 window.Spiderman = window.classes.Spiderman = 
@@ -12,12 +12,12 @@ class Spiderman
   {
     Object.assign( this, { model_transform: Mat4.translation([0,1,0]), camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
                            gs: graphics_state } );
-    this.VELOCITY = 10; // Adjustable
+    Object.defineProperty( this, 'VELOCITY', { value: 25,  writable: false } ); // Adjustable
   }
   physics_move( displacement_Vec, distance = this.VELOCITY * this.gs.animation_delta_time/1000 )
   {
     this.model_transform = this.model_transform.times( Mat4.translation( displacement_Vec.times(distance) ) );
-    this.camera.update_translate( this.model_transform );
+    this.camera.translate( this.model_transform );
   }
   keyboard_move( direction )
   {
@@ -38,23 +38,23 @@ class Spiderman
     let theta = 0;
     let cross_product = Vec.of(0,0,-1).cross( movement_vector ),
         dot_product = Vec.of(0,0,-1).dot( movement_vector );
-    let rot_direction = cross_product.dot( Vec.of(0,1,0) ) > 0 ? 1 : -1;
-    theta = Math.acos( dot_product ) * rot_direction; // Theta becomes negative if movement_vector is CW of spiderman_orientation
+    let CCW_or_CW = cross_product.dot( Vec.of(0,1,0) ) > 0 ? 1 : -1;
+    theta = Math.acos( dot_product ) * CCW_or_CW; // Theta becomes negative if movement_vector is CW of spiderman_orientation
     this.rotate( theta );
     this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-distance) ) );
     
     // Update camera transform
-    this.camera.update_translate( this.model_transform );
+    this.camera.translate( this.model_transform );
   }
   rotate( theta )
   {
     // Apply rotation to model transform. Make sure camera is aware that Spiderman has rotated but it should stay in place.
     this.model_transform = this.model_transform.times( Mat4.rotation(theta, Vec.of(0,1,0)) );
-    this.camera.update_stationary( theta );
+    this.camera.rotate_subject( theta );
   }
 
   // Direct camera functions
-  camera_update_rotate( mouseEvent ) { this.camera.update_rotate( mouseEvent ); }
+  camera_swivel( mouseEvent ) { this.camera.swivel( mouseEvent ); }
   camera_toggle_birdseye() { this.camera.toggle_birdseye(); }
   camera_look_forward() { this.camera.look_forward(); }
 }
