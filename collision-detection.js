@@ -49,6 +49,16 @@ class AABB {
 }
 
 /*
+// Returns true if spidermanAABB intersects with any AABB in buildingAABBs
+function isSpidermanHittingBuilding(spidermanAABB, buildingAABBs) {
+  for ( let i=0; i<buildingAABBs.length; i++ ) {
+    if (AABB.doAABBsIntersect(spidermanAABB, buildingAABBs[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function isPointInsideAABB(point, box) {
   return (point.x >= box.minX && point.x <= box.maxX) &&
          (point.y >= box.minY && point.y <= box.maxY) &&
