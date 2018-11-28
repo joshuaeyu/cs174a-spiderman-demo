@@ -116,7 +116,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
 	  // Create spiderman's AABB
-	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix.times(Mat4.translation([0,0,0])));
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 
 	  // Check input and move Spiderman for the next frame
@@ -124,7 +124,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for (let dirString in this.movement_directions) {
 	  	if (gapCollisionDetection) {
 			if (this.movement_directions[dirString]) {
-				const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1])).times(Mat4.translation([0,0,0]));
+				const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));
 				const future_AABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, next_transform);
 				
 				let canMove = true;
@@ -147,20 +147,20 @@ class Assignment_Four_Scene extends Scene_Component
 	  		}
 	  	}
 	  	else {
-        if (this.movement_directions[dirString]) {
-          if (AABB.doAABBsIntersect(spidermanAABB, buildingAABB)) {
-            const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,.5])).times(Mat4.translation([0,-1,0]));
-            const future_AABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, next_transform);
-            if (!AABB.doAABBsIntersect(future_AABB, buildingAABB))
-            {
-              this.spiderman.keyboard_move(dirString);
-            }
-          }
-          else {
-            this.spiderman.keyboard_move(dirString);
-          }
-        }	
-	  	}
+			if (this.movement_directions[dirString]) {
+			  if (AABB.doAABBsIntersect(spidermanAABB, buildingAABB)) {
+				const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,.5])).times(Mat4.translation([0,-1,0]));
+				const future_AABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, next_transform);
+				if (!AABB.doAABBsIntersect(future_AABB, buildingAABB))
+				{
+				  this.spiderman.keyboard_move(dirString);
+				}
+			  }
+			  else {
+				this.spiderman.keyboard_move(dirString);
+			  }
+			}	
+		}
 	  }
   }
 }
