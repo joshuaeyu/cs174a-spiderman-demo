@@ -38,18 +38,27 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
-	  //generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(100,100,100);
+	  // GLADYS - generate world with inputted size
+	  this.worldTransforms = new WorldTransforms(150,100,100,16);
 
-	  // GLADYS - generate building objects with random heights and materials/textures
-	  this.buildings = generate_buildings_on_grid( 16, 25, 8, 12, 20, this.shapes.building, this.materials.buildings );
-	  
+	  // GLADYS - generate building objects with random textures and their AABBs from saved buildings' transforms
+	  const buildingTransforms = this.worldTransforms.getTransforms().buildings;
+	  this.buildings = [];
+	  for (let i=0; i<buildingTransforms.length; i++) {
+	  	  const buildingTransform = buildingTransforms[i];
+		  const buildingMat = this.materials.buildings[Math.floor(Math.random()*this.materials.buildings.length)];
+      	  const aabb = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingTransform);
+      	  this.buildings.push(new Building(buildingMat, buildingTransform, aabb));
+	  }
+
 	  // GLADYS - generate boundary AABBs based on values in this.worldTransforms
 	  this.boundaryAABBs = [];
 	  for (let boundaryTransformStr in this.worldTransforms.getTransforms().boundaries) {
 	  	const boundaryTransform = this.worldTransforms.getTransforms().boundaries[boundaryTransformStr];
 	  	this.boundaryAABBs.push(AABB.generateAABBFromPoints(this.shapes.wall.positions, boundaryTransform));
 	  }
+
+	  // TODO: lampposts, cars
 	  
 	  // ============= end of static world generation
      
@@ -102,10 +111,9 @@ class Assignment_Four_Scene extends Scene_Component
 	  // draw all buildings
 	  for (let i=0; i<this.buildings.length; i++) {
 	  	const building = this.buildings[i];
-	  	const drawable = building.get_drawable();
 	  	const transform = building.get_transform();
 	  	const material = building.get_material();
-	  	drawable.draw( graphics_state, transform, material );
+	  	this.shapes.building.draw( graphics_state, transform, material );
 	  	//this.shapes.AABB.draw( graphics_state, transform, this.materials.AABB); //Uncomment to see building AABBs in red
 	  }
      

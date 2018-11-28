@@ -1,13 +1,9 @@
 window.Building = window.classes.Building = 
 class Building {
-  constructor( shape, material, transform, aabb ) {
-    this.shape = shape;
+  constructor( material, transform, aabb ) {
     this.material = material;
     this.transform = transform;
     this.aabb = aabb;
-  }
-  get_drawable() {
-    return this.shape;
   }
   get_material() {
     return this.material;
@@ -20,6 +16,7 @@ class Building {
   }
 }
 
+/*
 // Returns an array of Building objects in a grid. Buildings will have random heights and textures.
 // @param numCells: # of cells on grid side. 1 building per cell
 // @param cellLength: unit length of cell side
@@ -48,3 +45,4 @@ function generate_buildings_on_grid( numCells, cellLength, bLength, bMinHeight, 
   }
   return buildings;
 }
+*/
