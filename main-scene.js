@@ -17,7 +17,9 @@ class Assignment_Four_Scene extends Scene_Component
       		building:   new Cube(),
       		boundary: 	new Cube(),
       		spiderman:  new Cube(),
-      		AABB: new Cube()
+      		AABB: new Cube(),
+      		lamp: new lamp(),
+      		ball: new Subdivision_Sphere(4)
       }
       this.submit_shapes( context, shapes );
 
@@ -26,6 +28,7 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
+      	light: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1)),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,0 ) )
       }
 
@@ -62,13 +65,14 @@ class Assignment_Four_Scene extends Scene_Component
 			this.spiderman.camera_look_forward(); } );
     }
     display( graphics_state )
-    { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
+    {graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
       const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
 
       // Sorry for the confusing layout. The ground is based at a height of -1. You can shift it up if you'd like, it would only change our overall max height.
       // The south wall and ceiling are commented out so you can see inside the boundaries. The more complicated model doesn't use a for loop so each building 
       // can be adjusted to look more reailistic.
-  
+      this.shapes.lamp.draw(graphics_state,Mat4.identity().times(Mat4.translation([3,4,4])),this.materials.gray);
+      this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 	  this.shapes.ground.draw( graphics_state, Mat4.scale(Vec.of(50,1,50)).times(Mat4.translation(Vec.of(0,-2,0))), this.materials.silver);
 	  this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(50,50,1)).times(Mat4.translation(Vec.of(0,0.98,-51))), this.materials.white);	// North Wall
 	  this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(1,50,50)).times(Mat4.translation(Vec.of(-51,0.98,0))), this.materials.gray);		// West Wall
@@ -185,3 +189,18 @@ class Texture_Rotate extends Phong_Shader
       }`;
     }
 }
+
+//lamp post
+//notes on the lamp post:
+//	to place on ground, will need to place it 2 units above the ground
+//  a circle and light need to be scaled at 0.8 and placed at +4.5 x units and +4 y-units of where the lamp post is created
+window.lamp = window.classes.lamp =
+class lamp extends Shape     
+  { constructor()
+      { super( "positions", "normals", "texture_coords" );
+      	  Closed_Cone.insert_transformed_copy_into(this,[15,15],Mat4.identity().times(Mat4.translation([0,-4,0]).times(Mat4.rotation(-Math.PI/2,Vec.of(1,0,0)))));
+          Cube.insert_transformed_copy_into(this,[],Mat4.identity().times(Mat4.scale([0.25,4,0.25])));
+          Cube.insert_transformed_copy_into(this,[],Mat4.identity().times(Mat4.translation([1.75,4,0])).times(Mat4.scale([2,0.25,0.25])));
+          Half_Sphere.insert_transformed_copy_into(this,[15,15],Mat4.identity().times(Mat4.translation([4.5,4,0]).times(Mat4.rotation(-Math.PI/2,Vec.of(1,0,0)))));
+          Subdivision_Sphere.insert_transformed_copy_into(this,[4],Mat4.identity().times(Mat4.translation([4.5,4,0])).times(Mat4.scale([0.75,0.75,0.75])));
+  } }
