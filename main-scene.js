@@ -15,7 +15,7 @@ class Assignment_Four_Scene extends Scene_Component
       const shapes = { 
       		ground:		new Cube(),
       		building:   new Cube(),
-      		boundary: 	new Cube(),
+      		wall: 	new Cube(),
       		spiderman:  new Cube(),
       		AABB: 		new Cube()
       }
@@ -26,7 +26,7 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
-      	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.5) ),
+      	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.25) ),
       	buildings: [
 			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/1.png", true) } ),
 			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/2.png", true) } ),
@@ -40,9 +40,23 @@ class Assignment_Four_Scene extends Scene_Component
 
       //this.lights = [ new Light( Vec.of( -5,5,5,1 ), Color.of( 1,1,1,1 ), 100000 ) ];
 		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
-	
+
+	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
+
+	  //generate world with inputted size
+	  this.worldTransforms = new WorldTransforms(100,100,100);
+
 	  // GLADYS - generate building objects with random heights and materials/textures
-	  this.buildings = generate_buildings_on_grid( 8, 25, 8, 12, 20, this.shapes.building, this.materials.buildings );
+	  this.buildings = generate_buildings_on_grid( 16, 25, 8, 12, 20, this.shapes.building, this.materials.buildings );
+	  
+	  // GLADYS - generate boundary AABBs based on values in this.worldTransforms
+	  this.boundaryAABBs = [];
+	  for (let boundaryTransformStr in this.worldTransforms.getTransforms().boundaries) {
+	  	const boundaryTransform = this.worldTransforms.getTransforms().boundaries[boundaryTransformStr];
+	  	this.boundaryAABBs.push(AABB.generateAABBFromPoints(this.shapes.wall.positions, boundaryTransform));
+	  }
+	  
+	  // ============= end of static world generation
 
 	  // JOSH - Spiderman object
 	  this.spiderman = new Spiderman( context.globals.graphics_state );	
@@ -77,31 +91,29 @@ class Assignment_Four_Scene extends Scene_Component
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
       const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
 
-	  // Draw world boundaries
-	  this.shapes.ground.draw( graphics_state, Mat4.scale(Vec.of(100,1,100)).times(Mat4.translation(Vec.of(0,-1,0))), this.materials.ground);
-	  const northWallTransform = Mat4.scale(Vec.of(50,50,1)).times(Mat4.translation(Vec.of(0,0.98,-51)));
-	  const westWallTransform = Mat4.scale(Vec.of(1,50,50)).times(Mat4.translation(Vec.of(-51,0.98,0)));
-	  const eastWallTransform = Mat4.scale(Vec.of(1,50,50)).times(Mat4.translation(Vec.of(51,0.98,0)));
-	  this.shapes.boundary.draw( graphics_state, northWallTransform, this.materials.skyWall);	// North Wall
-	  this.shapes.boundary.draw( graphics_state, westWallTransform, this.materials.skyWall);		// West Wall
-	  this.shapes.boundary.draw( graphics_state, eastWallTransform, this.materials.skyWall);		// East Wall
-	  //this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(50,50,1)).times(Mat4.translation(Vec.of(0,0.98,51))), this.materials.white);		// South Wall
-	  this.shapes.ground.draw( graphics_state, Mat4.scale(Vec.of(50,1,50)).times(Mat4.translation(Vec.of(0,98,0))), this.materials.sky);		// Ceiling
+	  const allWorldTransforms = this.worldTransforms.getTransforms();
 
-	  this.boundaryAABBs = [ 
-	  	AABB.generateAABBFromPoints(this.shapes.boundary.positions, northWallTransform),
-	  	AABB.generateAABBFromPoints(this.shapes.boundary.positions, westWallTransform),
-	  	AABB.generateAABBFromPoints(this.shapes.boundary.positions, eastWallTransform),
-	   ];
+	  //draw ground and ceiling
+	  const groundTransform = allWorldTransforms.ground;
+	  this.shapes.ground.draw( graphics_state, groundTransform, this.materials.ground);
+	  const ceilingTransform = allWorldTransforms.ceiling;
+	  this.shapes.ground.draw( graphics_state, ceilingTransform, this.materials.sky);
 
-	  // Draw all buildings
+	  //draw walls
+	  const wallTransforms = allWorldTransforms.walls;
+	  for (let dirString in wallTransforms) {
+	  	const transform = wallTransforms[dirString];
+	  	this.shapes.wall.draw(graphics_state, transform, this.materials.skyWall);
+	  }
+	  
+	  // draw all buildings
 	  for (let i=0; i<this.buildings.length; i++) {
 	  	const building = this.buildings[i];
 	  	const drawable = building.get_drawable();
 	  	const transform = building.get_transform();
 	  	const material = building.get_material();
 	  	drawable.draw( graphics_state, transform, material );
-	  	//this.shapes.AABB.draw( graphics_state, transform, this.materials.AABB);
+	  	//this.shapes.AABB.draw( graphics_state, transform, this.materials.AABB); //Uncomment to see building AABBs in red
 	  }
 
 	  // JOSH - Use model transform stored in Spiderman object.
@@ -115,7 +127,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 
 	  // Check input and move Spiderman for the next frame
-	  const gapCollisionDetection = true;
+	  const gapCollisionDetection = true; // if true, there will be gap between colliding objects
 	  for (let dirString in this.movement_directions) {
 	  	if (gapCollisionDetection) {
 			if (this.movement_directions[dirString]) {
@@ -128,8 +140,11 @@ class Assignment_Four_Scene extends Scene_Component
 						canMove = false;
 					}
 				}
-				for (let i=0; i<this.boundaryAABBs.length; i++) {
-					if (AABB.doAABBsIntersect(future_AABB, this.boundaryAABBs[i])) {
+
+				const boundaryAABBs = this.boundaryAABBs;
+				for (let i=0; i<boundaryAABBs.length; i++) {
+					this.shapes.AABB.draw( graphics_state, boundaryAABBs[i].getTransformMatrix(), this.materials.AABB ); //Uncomment to see boundary AABBs in red
+					if (AABB.doAABBsIntersect(future_AABB, boundaryAABBs[i])) {
 						canMove = false;
 					}
 				}

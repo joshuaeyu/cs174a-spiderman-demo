@@ -21,7 +21,7 @@ class Building {
 }
 
 // Returns an array of Building objects in a grid. Buildings will have random heights and textures.
-// @param numCells: # of cells on grid side
+// @param numCells: # of cells on grid side. 1 building per cell
 // @param cellLength: unit length of cell side
 // @param bLength: unit length of building side
 // @param bMinHeight, bMaxHeight: unit min and max heights of buildings
