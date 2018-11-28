@@ -8,7 +8,7 @@
 window.Spiderman = window.classes.Spiderman = 
 class Spiderman 
 {
-  constructor( graphics_state )
+  constructor( graphics_state ) // Add world object argument to constructor, also create new member variable for it so that Spidey is aware of world
   {
     Object.assign( this, { model_transform: Mat4.translation([0,1,0]),
                            camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
@@ -71,7 +71,7 @@ class Spiderman
     this.rotate( theta );
     this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-distance) ) );
     
-    // Update camera transform
+    // Update camera
     this.camera.translate( this.model_transform );
   }
   rotate( theta )
