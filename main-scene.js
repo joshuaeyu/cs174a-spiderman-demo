@@ -13,6 +13,8 @@ class Assignment_Four_Scene extends Scene_Component
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
       const shapes = { 
+      		body:		new Cube(),
+      		wheels:		new Torus(20,20),
       		ground:		new Cube(),
       		building:   new Cube(),
       		boundary: 	new Cube(),
@@ -26,6 +28,10 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
+      	black: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1) ),
+      	yellow:context.get_instance( Phong_Shader ).material( Color.of (1,1,0,1) ),
+      	red:   context.get_instance( Phong_Shader ).material( Color.of (1,0.2,0.2,1) ),
+      	blue:  context.get_instance( Phong_Shader ).material( Color.of (0.2,0.6,0.8,1) ),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,0 ) )
       }
 
@@ -43,6 +49,93 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // JOSH - Implement Minsoo's smooth motion
 	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
+
+	  
+	  // Spiderman's body parts
+	  this.head = new Node(Mat4.translation([0,3.2,0]).times(Mat4.scale([0.25,0.25,0.25])));
+	  this.neck = new Node(Mat4.translation([0,2.85,0]).times(Mat4.rotation(0.8,[0,1,0]).times(Mat4.scale([0.15,0.15,0.15]))));
+	  this.torso = new Node(Mat4.translation([0,2.2,0]).times(Mat4.rotation(0.8,[0,1,0]).times(Mat4.scale([0.45,0.5,0.3]))));
+	  this.right_shoulder = new Node(Mat4.translation([0.25,2.5,-0.7]).times(Mat4.rotation(-0.3,[1,0,0]).times(Mat4.scale([0.15,0.15,0.4]))));
+	  this.right_forearm = new Node(Mat4.translation([0.3,2.6,-1.3]).times(Mat4.rotation(0.65,[1,0,0]).times(Mat4.scale([0.15,0.15,0.4]))));
+	  this.right_hand = new Node(Mat4.translation([0.3,2.85,-1.7]).times(Mat4.scale([0.15,0.1,0.15])));
+	  this.right_thumb = new Node(Mat4.translation([0.5,2.85,-1.77]).times(Mat4.scale([0.1,0.05,0.05])));
+	  this.right_pointer = new Node(Mat4.translation([0.38,2.85,-2]).times(Mat4.scale([0.04,0.04,0.13])));
+	  this.right_pinky = new Node(Mat4.translation([0.2,2.85,-1.95]).times(Mat4.scale([0.04,0.04,0.1])));
+	  this.right_ring = new Node(Mat4.translation([0.27,2.9,-1.8]).times(Mat4.scale([0.07,0.1,0.1])));
+	  this.left_shoulder = new Node(Mat4.translation([-0.4,2.4,0.45]).times(Mat4.rotation(-0.3,[1,0,0]).times(Mat4.rotation(-0.2,[0,0,1]).times(Mat4.scale([0.15,0.4,0.15])))));
+	  this.left_forearm = new Node(Mat4.translation([-0.5,1.65,0.45]).times(Mat4.rotation(0.2,[1,0,0]).times(Mat4.scale([0.15,0.4,0.15]))));
+	  this.left_hand = new Node(Mat4.translation([-0.5,1.2,0.35]).times(Mat4.scale([0.15,0.15,0.15])));
+	  this.abdomen = new Node(Mat4.translation([0,1.6,0]).times(Mat4.rotation(0.8,[0,1,0]).times(Mat4.scale([0.4,0.4,0.25]))));
+	  this.waist = new Node(Mat4.translation([0,1,0]).times(Mat4.rotation(0.8,[0,1,0]).times(Mat4.scale([0.35,0.2,0.2]))));
+	  this.right_thigh = new Node(Mat4.rotation(-1.8,[0,1,0]).times(Mat4.translation([-0.5,0.55,0]).times(Mat4.rotation(-1,[0,0,1]).times(Mat4.scale([0.2,0.55,0.2])))));
+	  this.left_thigh = new Node(Mat4.rotation(-0.2,[0,0,1]).times(Mat4.translation([-0.3,0.3,0.15]).times(Mat4.rotation(-0.2,[1,0,0]).times(Mat4.scale([0.2,0.55,0.2])))));
+	  this.right_calf = new Node(Mat4.translation([0.2,-0.2,-0.9]).times(Mat4.scale([0.16,0.5,0.16])));
+	  this.left_calf = new Node(Mat4.translation([-0.3,-0.4,0.6]).times(Mat4.rotation(-1,[1,0,0])).times(Mat4.scale([0.16,0.5,0.16])));
+	  this.right_foot = new Node(Mat4.translation([0.2,-0.7,-1.1]).times(Mat4.rotation(1.9,[0,1,0]).times(Mat4.scale([0.35,0.1,0.15])))); 
+	  this.left_foot = new Node(Mat4.translation([-0.45,-0.7,0.6]).times(Mat4.rotation(-1,[0,1,0]).times(Mat4.scale([0.35,0.1,0.15]))));
+	  this.board1 = new Node(Mat4.translation([0,-0.9,-0.3]).times(Mat4.scale([1,0.1,1.75])));
+	  this.board2 = new Node(Mat4.translation([0,-0.9,-2.25]).times(Mat4.scale([0.75,0.1,0.25])));
+	  this.board3 = new Node(Mat4.translation([0,-0.9,-2.7]).times(Mat4.scale([0.5,0.1,0.2])));
+
+	  // Child Nodes
+	  this.torso.add_child(this.neck);
+	  this.neck.add_child(this.head);
+	  this.torso.add_child(this.right_shoulder);
+	  this.right_shoulder.add_child(this.right_forearm);
+	  this.right_forearm.add_child(this.right_hand);
+	  this.right_hand.add_child(this.right_thumb);
+	  this.right_hand.add_child(this.right_pointer);
+	  this.right_hand.add_child(this.right_pinky);
+	  this.right_hand.add_child(this.right_ring);
+	  this.torso.add_child(this.left_shoulder);
+	  this.left_shoulder.add_child(this.left_forearm);
+	  this.left_forearm.add_child(this.left_hand);
+	  this.torso.add_child(this.abdomen);
+	  this.abdomen.add_child(this.waist);
+	  this.waist.add_child(this.right_thigh);
+	  this.right_thigh.add_child(this.right_calf);
+ 	  this.right_calf.add_child(this.right_foot);
+ 	  this.waist.add_child(this.left_thigh);
+ 	  this.left_thigh.add_child(this.left_calf);
+ 	  this.left_calf.add_child(this.left_foot);
+	  this.left_foot.add_child(this.board1);
+ 	  this.board1.add_child(this.board2);
+ 	  this.board2.add_child(this.board3);
+
+ 	  // Car
+ 	  this.car = new Node(Mat4.translation([0,0.33,0]).times(Mat4.scale([1,0.75,2.5])));
+ 	  this.hood = new Node(Mat4.translation([0,1.75,0]).times(Mat4.scale([1,0.75,0.5])));
+ 	  this.windows = new Node(Mat4.translation([0,1.6,-0.2]).times(Mat4.scale([1.1,0.6,0.2])));
+ 	  this.chassis = new Node(Mat4.identity());
+ 	  this.wheel1 = new Node(Mat4.translation([0.5,-1.2,-0.5]).times(Mat4.scale([0.15,0.15,0.15]).times(Mat4.rotation(1.57, [0,1,0]))));
+ 	  this.rim1 = new Node(Mat4.scale([0.75,1.25,1]));
+ 	  this.wheel2 = new Node(Mat4.translation([-0.5,-1.2,-0.5]).times(Mat4.scale([0.15,0.15,0.15]).times(Mat4.rotation(1.57, [0,1,0]))));
+ 	  this.rim2 = new Node(Mat4.scale([0.75,1.25,1]));
+ 	  this.wheel3 = new Node(Mat4.translation([0.5,-1.2,0.5]).times(Mat4.scale([0.15,0.15,0.15]).times(Mat4.rotation(1.57, [0,1,0]))));
+ 	  this.rim3 = new Node(Mat4.scale([0.75,1.25,1]));
+ 	  this.wheel4 = new Node(Mat4.translation([-0.5,-1.2,0.5]).times(Mat4.scale([0.15,0.15,0.15]).times(Mat4.rotation(1.57, [0,1,0]))));
+ 	  this.rim4 = new Node(Mat4.scale([0.75,1.25,1]));
+ 	  this.left_light = new Node(Mat4.translation([-0.5,0.2,-0.8]).times(Mat4.scale([0.25,0.25,0.25])));
+ 	  this.right_light = new Node(Mat4.translation([0.5,0.2,-0.8]).times(Mat4.scale([0.25,0.25,0.25])));
+ 	  this.left_back_light = new Node(Mat4.translation([-0.6,0,0.8]).times(Mat4.scale([0.3,0.25,0.25])));
+ 	  this.right_back_light = new Node(Mat4.translation([0.6,0,0.8]).times(Mat4.scale([0.3,0.2,0.25])));
+ 	  
+
+ 	  this.car.add_child(this.hood);
+ 	  this.car.add_child(this.windows);
+ 	  this.car.add_child(this.chassis);
+ 	  this.chassis.add_child(this.wheel1);
+	  this.wheel1.add_child(this.rim1);
+ 	  this.chassis.add_child(this.wheel2);
+ 	  this.wheel2.add_child(this.rim2);
+	  this.chassis.add_child(this.wheel3);
+	  this.wheel3.add_child(this.rim3);
+	  this.chassis.add_child(this.wheel4);
+	  this.wheel4.add_child(this.rim4);
+	  this.car.add_child(this.left_light);
+	  this.car.add_child(this.right_light);
+	  this.car.add_child(this.left_back_light);
+	  this.car.add_child(this.right_back_light);
     }
     make_control_panel()
     { // Takes user input for button presses
@@ -105,13 +198,54 @@ class Assignment_Four_Scene extends Scene_Component
       */
 
 	  // Simple Model
-	  /*
-	  var i, j;
-	  for (i = -40; i < 50; i+=10)
-	  	for (j = -40; j < 50; j+=10)
-	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
-	  */
 	  
+	  var i, j;
+	  for (i = -40; i < 50; i+=20)
+	  	for (j = -40; j < 50; j+=20)
+	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(4,10,4))), this.materials.tan);
+	  
+	  
+	  // Draws all of spiderman
+	  var drawing_list = [];
+	  this.torso.list_draw(drawing_list);
+	  var k, size = drawing_list.length;
+	  for (k = 0; k != size; k++)
+	  	this.shapes.body.draw( graphics_state, drawing_list[k], this.materials.tan);
+	  
+	  var drawing_list2 = [];
+	  this.car.list_draw_compounded(drawing_list2, Mat4.identity());
+	  var j, m, size2 = drawing_list2.length, tempMatrix = Mat4.identity(), transformation = Mat4.translation([-10,0,-15]);
+	  for (m = 0; m < 8; m++, transformation = transformation.times(Mat4.rotation(1.57,[0,1,0]).times(Mat4.translation([15,0,-5]))))
+	  	{
+	  		if (m == 4)
+	  			transformation = Mat4.translation([30,0,25]);
+	  		for (j = 0; j < size2; j+=16)
+	  		{
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j]), this.materials.blue);
+				this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 1]), this.materials.blue);
+				this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 2]), this.materials.black);
+				this.shapes.wheels.draw( graphics_state, transformation.times(drawing_list2[j + 4]), this.materials.black);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 5]), this.materials.white);
+				this.shapes.wheels.draw( graphics_state, transformation.times(drawing_list2[j + 6]), this.materials.black);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 7]), this.materials.white);
+				this.shapes.wheels.draw( graphics_state, transformation.times(drawing_list2[j + 8]), this.materials.black);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 9]), this.materials.white);
+	  			this.shapes.wheels.draw( graphics_state, transformation.times(drawing_list2[j + 10]), this.materials.black);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 11]), this.materials.white);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 12]), this.materials.yellow);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 13]), this.materials.yellow);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 14]), this.materials.red);
+	  			this.shapes.body.draw( graphics_state, transformation.times(drawing_list2[j + 15]), this.materials.red);
+	  		}
+	  		
+	  	}
+	  this.wheel1.position = this.wheel1.position.times(Mat4.rotation(Math.cos(2*t)/10,[0,0,1]));
+	  this.wheel2.position = this.wheel2.position.times(Mat4.rotation(Math.cos(2*t)/10,[0,0,1]));
+	  this.wheel3.position = this.wheel3.position.times(Mat4.rotation(Math.cos(2*t)/10,[0,0,1]));
+	  this.wheel4.position = this.wheel4.position.times(Mat4.rotation(Math.cos(2*t)/10,[0,0,1]));
+	  this.car.position = this.car.position.times(Mat4.translation([0,0,Math.cos(2*t)/15]));
+	  //this.torso.update_position(Mat4.translation([0,0,Math.cos(t)/10]));
+
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
@@ -128,7 +262,7 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  //draw stuff
 	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
-	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
+	  //this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,-1,0])), this.materials.tan);
 
 	  //create AABBs
