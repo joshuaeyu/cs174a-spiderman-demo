@@ -12,7 +12,7 @@ class Spiderman
   {
     Object.assign( this, { model_transform: Mat4.translation([0,1,0]), camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
                            gs: graphics_state } );
-    Object.defineProperty( this, 'VELOCITY', { value: 25,  writable: false } ); // Adjustable
+    Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
   }
   physics_move( displacement_Vec, distance = this.VELOCITY * this.gs.animation_delta_time/1000 )
   {
