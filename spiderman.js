@@ -14,6 +14,7 @@ class Spiderman
                            camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
                            physics: new Physics( graphics_state, Mat4.translation([0,1,0]) ),
                            gs: graphics_state } );
+	this.contact = false;
 	this.webbed = false;
     //Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
   }
@@ -95,19 +96,33 @@ class Spiderman
   //jump function that will call the physics class jump function
   //should only be called when button pressed
   jump(){ this.physics.jump(); };
-  update(){		this.model_transform = this.physics.gravity(this.model_transform);  this.camera.translate(this.model_transform)}
-/*//----------------------------------------------------------------------------------//  
+//----------------------------------------------------------------------------------//  
   //update/gravity
   update(){
-	if (this.webbed == false){
+	if (this.contact){
+	}
+	if (!this.webbed && !this.contact){
 		this.model_transform = this.physics.gravity(this.model_transform);
 		this.physics.reset_angular();
 	}
-	else{
+	if (this.webbed == true){
 		this.model_transform = this.physics.run_angular(this.model_transform);
-	}  
+	} 
+		this.camera.translate(this.model_transform); 
   }
-//----------------------------------------------------------------------------------//  */
+  
+  change_contact(bool){
+  	this.contact = bool;
+  }
+  change_web(){
+	  if (this.webbed){
+		this.webbed = false;
+	  }
+	  else{
+		  this.webbed = true;
+	  }
+  }
+//----------------------------------------------------------------------------------// 
   // Direct camera functions
   camera_swivel( mouseEvent ) { this.camera.swivel( mouseEvent ); }
   camera_toggle_birdseye() { this.camera.toggle_birdseye(); }

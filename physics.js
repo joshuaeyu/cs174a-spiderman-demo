@@ -14,7 +14,7 @@ class Physics
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
 		this.up_velocity = 2; //for when he is climbing up walls
-		this.acc_grav = -9.8; 
+		this.acc_grav = -25; 
 		this.radius = 0.5; //defined in length unit
 		this.rotation = {pitch: 0, roll: 0, yaw: 0 };
 		this.ang_vel = {x: 0, y: 0, z: 0 };
@@ -56,7 +56,7 @@ class Physics
 	{
 		if (this.position.y < this.permanent_ground || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
-			this.velocity_y = 10;
+			this.velocity_y = 15.0;
 			this.grounded = false;
 		}
 	}
