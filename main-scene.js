@@ -127,6 +127,30 @@ class Assignment_Four_Scene extends Scene_Component
 	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 
+	  // GLADYS - multi-shape AABB generation demo.
+	  const multiShapeAABBDemo = true; //switch to false to turn demo off
+	  let demoTestAABB;
+	  if (multiShapeAABBDemo) {
+		  const baseBoxTransform = Mat4.identity().times(Mat4.translation(Vec.of(4,1,4)));
+		  const topBoxTransform = baseBoxTransform.times(Mat4.translation(Vec.of(0,5,0))).times(Mat4.scale([0.5,1,0.5]));
+
+		  this.shapes.ground.draw( graphics_state, baseBoxTransform, this.materials.tan);
+		  this.shapes.ground.draw( graphics_state, topBoxTransform, this.materials.tan);
+
+		  demoTestAABB = AABB.generateAABBFromShapes({
+			 base: {
+				 positions: this.shapes.ground.positions,
+				 transform: baseBoxTransform
+			 },
+			 top: {
+				 positions: this.shapes.ground.positions,
+				 transform: topBoxTransform
+			 }
+		  });
+
+		  this.shapes.AABB.draw( graphics_state, demoTestAABB.getTransformMatrix(), this.materials.AABB);
+	  }
+
 	  // Check input and move Spiderman for the next frame
 	  const gapCollisionDetection = true; // if true, there will be gap between colliding objects
 	  for (let dirString in this.movement_directions) {
@@ -149,12 +173,18 @@ class Assignment_Four_Scene extends Scene_Component
 						canMove = false;
 					}
 				}
+
+				if (multiShapeAABBDemo && AABB.doAABBsIntersect(future_AABB, demoTestAABB)) {
+					canMove = false;
+				}
+
 				if (canMove) {
 					this.spiderman.keyboard_move(dirString);
 				}
 	  		}
 	  	}
 	  	else {
+	  		// note: non-gap collision detection currently won't compile
 			if (this.movement_directions[dirString]) {
 			  if (AABB.doAABBsIntersect(spidermanAABB, buildingAABB)) {
 				const next_transform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,.5])).times(Mat4.translation([0,-1,0]));

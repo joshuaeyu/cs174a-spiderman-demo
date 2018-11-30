@@ -40,6 +40,58 @@ class AABB {
     return new AABB(minx, maxx, miny, maxy, minz, maxz, transformMatrix);
   }
 
+  // Returns the smallest AABB for an object composed of multiple shapes based on each subshape's points and transform matrix.
+  // @param shapes: an object containing the points and transform matrix of each subshape. e.g. for a car, parameter may look like
+  //   {
+  //     body: {
+  //       positions: [],
+  //       transform: Mat4.identity()
+  //     },
+  //     wheel1: {
+  //       positions: [],
+  //       transform: Mat4.identity()
+  //     },
+  //     etc...
+  //   }
+  //   where "body" and "wheel1" are subshape names, and each are an object containing an array of the subshape's positions, and the subshape's transform matrix.
+  //   The positions of a subshape are what's returned in main-scene.js by this.shapes.[subshapeDrawable].positions.
+  //   The transform matrix is the final matrix you'd use to draw the subshape.
+  //   MUST use the names "positions" and "transform" for each subshape's points and matrix. Other names are just to help you.
+  //   Order of subshapes doesn't matter.
+  static generateAABBFromShapes( shapes ) {
+    if (Object.keys(shapes).length === 0) return undefined;
+
+    let minx, maxx, miny, maxy, minz, maxz;
+    for (let subshapeStr in shapes) {
+      const currShape = shapes[subshapeStr];
+      let subshapeGlobalPoints = currShape.positions.map((p) => currShape.transform.times(p.to4(true)));
+
+      if (minx === undefined) minx = subshapeGlobalPoints[0][0];
+      if (maxx === undefined) maxx = subshapeGlobalPoints[0][0];
+      if (miny === undefined) miny = subshapeGlobalPoints[0][1];
+      if (maxy === undefined) maxy = subshapeGlobalPoints[0][1];
+      if (minz === undefined) minz = subshapeGlobalPoints[0][2];
+      if (maxz === undefined) maxz = subshapeGlobalPoints[0][2];
+
+      for ( let i=0; i<subshapeGlobalPoints.length; i++ ) {
+        const ptX = subshapeGlobalPoints[i][0], ptY = subshapeGlobalPoints[i][1], ptZ = subshapeGlobalPoints[i][2];
+        if ( ptX < minx ) minx = ptX;
+        if ( ptX > maxx ) maxx = ptX;
+        if ( ptY < miny ) miny = ptY;
+        if ( ptY > maxy ) maxy = ptY;
+        if ( ptZ < minz ) minz = ptZ;
+        if ( ptZ > maxz ) maxz = ptZ;
+      }
+    }
+
+    const halfDiffX = (maxx-minx)/2., halfDiffY = (maxy-miny)/2., halfDiffZ = (maxz-minz)/2.;
+    const center = Vec.of(minx+halfDiffX,miny+halfDiffY,minz+halfDiffZ);
+    const matrix = Mat4.identity().times(Mat4.translation(center)).times(Mat4.scale([halfDiffX, halfDiffY, halfDiffZ]));
+
+    return new AABB(minx, maxx, miny, maxy, minz, maxz, matrix);
+  }
+
+
   // Returns true if the given AABB's intersect.
   static doAABBsIntersect(a, b) {
     return (a.minX <= b.maxX && a.maxX >= b.minX) &&
