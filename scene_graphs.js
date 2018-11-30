@@ -1,8 +1,10 @@
 // Scene Graphs functions
 window.Node = window.classes.Node =
 class Node {
-  constructor(node_transform) {
+  constructor(node_transform, shape, color) {
     this.position = node_transform;
+    this.shape = shape;
+    this.color = color;
     this.children = [];
   }
 
@@ -36,11 +38,20 @@ class Node {
       this.children[i].list_draw(array);
   }
 
-  list_draw_compounded(array, some_matrix) {
+  list_draw_compounded(array, some_matrix, node_list) {
     var i, size = this.number_child(), new_matrix = some_matrix.times(this.get_pos());
     array.push(new_matrix);
+    node_list.push(this);
     for (i = 0; i != size; i++)
-      this.children[i].list_draw_compounded(array, new_matrix);
+      this.children[i].list_draw_compounded(array, new_matrix, node_list);
   } 
+
+  list_nodes(array)
+  {
+    var i, size = this.number_child();
+    array.push(this);
+    for (i = 0; i != size; i++)
+      this.children[i].list_nodes(array);
+  }
 
 }
