@@ -77,6 +77,7 @@ class Spiderman
     //update physical position
     this.physics.update_pos( this.model_transform );
   }
+  //may need to add another keyboard just to let him move up
   rotate( theta )
   {
     // Apply rotation to model transform. Make sure camera is aware that Spiderman has rotated but it should stay in place.

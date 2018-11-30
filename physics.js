@@ -1,21 +1,4 @@
 //physics class will contain all physics functions and member variables
-	//member variables
-		//mass - single value
-		//position - three coordinates
-		//velocity_xz - single variable, not under the influence of any force, either 0 or velocity value
-		//velocity_y - single variable, is under the influence of gravity
-		//gravity - single variable
-		//radius - single value, used for moment of inertia calculation
-		//rotation - three values: pitch roll yaw
-		//angular velocity - three values for each coordinate
-		//angular acceleration - three values for each coordinate
-		//moment of inertia - 3 x 3 matrix. will be created in calculating angular acceleration
-	
-	//functions
-		//all will return position to spider man class or the world class
-		//jumping
-		//angular calculation when shooting web 
-
 window.Physics = window.classes.Physics =
 class Physics
 {
@@ -30,6 +13,7 @@ class Physics
 		this.pt_of_rotation = {x: 0, y: 0, z: 0 };
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
+		this.up_velocity = 2; //for when he is climbing up walls
 		this.acc_grav = -9.8; 
 		this.radius = 0.5; //defined in length unit
 		this.rotation = {pitch: 0, roll: 0, yaw: 0 };
@@ -44,15 +28,16 @@ class Physics
 		this.position.y = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[1],
 		this.position.z = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2]
 	}
+	//update ground function, used for when sticking
+	update_ground(){
+		this.ground_y = this.position.y;
+	}
+	//reset ground function, used for when he is not sticking
+	reset_ground(){
+		this.ground_y = 1;
+	}
 	//grav - so calculating motion after initial jump that gives y-velocity
 	//always called
-	//TODO
-	//add spidermanUnscaledPosMat as an argument
-	//translate(spidermanUnscaledPosMat) --> gives updated position 
-	//do calculation changing position, spiderman_Posmat, spiderman_Posvec <-- get rid of position later and base all on spiderman_Posvec
-	//return updated spiderman_Posmat using 
-	//spidermanUnscaledPosMat.times
-	//(Mat4.translation([0,this.velocity_y * this.gs.animation_delta_time / 1000, 0])
 	gravity(spidermanUnscaledPosMat)
 	{
 		//get updated spiderman_Posmat, spiderman_Posvec, position
@@ -73,7 +58,7 @@ class Physics
 		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
 		return this.spiderman_PosMat;
 	}
-	//Should be fine, not high priority
+	//Should be fine
 	//jumping -- only called when spacebar pressed
 	jump()
 	{
@@ -116,7 +101,7 @@ class Physics
 		var mag_force = this.mass * (this.velocity_xz)/4.0;
 		var z_component = -(this.position.x - this.pt_of_rotation.x)/(this.position.z - this.pt_of_rotation.z);
 			T = Vec.of(this.position.x - this.pt_of_rotation.x,this.position.y  - this.pt_of_rotation.y,this.position.z -  - this.pt_of_rotation.z)
-			.cross(Vec.of(1.0,this.gravity,z_component));
+			.cross(Vec.of(mag_force,this.gravity,z_component * mag_force));
 		//calculate the moment of inertia, assuming a sphere b/c why not
 		var J = [[0.4 * this.mass * this.radius, 0.0, 0.0],
 				 [0.0, 0.4 * this.mass * this.radius, 0.0],

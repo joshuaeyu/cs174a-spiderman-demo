@@ -156,6 +156,10 @@ class Assignment_Four_Scene extends Scene_Component
 				}
 				if (canMove) {
 					this.spiderman.keyboard_move(dirString);
+					this.spiderman.physics.reset_ground();
+				}
+				else{
+					this.spiderman.physics.update_ground(spidermanPosMatrix);
 				}
 	  		}
 	  	}
