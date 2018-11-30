@@ -62,6 +62,7 @@ class Physics
 		this.position.y += this.velocity_y * this.gs.animation_delta_time / 1000;
 		if(this.position.y < (this.ground_y + 0.01)){
 			this.position.y = this.ground_y;
+			this.velocity_xz = 10.0; //can have a higher velocity when in air like swinging but will only have one speed on ground
 			this.velocity_y = 0.0;
 			this.grounded = true;
 		}
@@ -82,9 +83,22 @@ class Physics
 			this.grounded = false;
 		}
 	}
+	//-----------------------------SEQUENCE OF OPERATIONS FOR SWINGING---------------------------//
+	//get pt of rotation
+	//velocity_verlet() -- gives you current pitch, yaw, roll (first time should always be 0,0,0)
+	//calc_ang_comp() -- gives you updated angular acceleration, velocity, and position
+	//toQuaternion() -- gives you you quaternion
+	//findPosition() -- uses quaternion to give you new position
+	//-----------------------------SEQUENCE OF OPERATIONS FOR SWINGING---------------------------//
+	
+	//get the point of rotation, should only have to run once or just run every time but same input
+	get_pt_of_rotation(RotaPtMat){
+		pt_of_rotation.x = RotaPtMat.times(Vec.of(0,0,0,1))[0];
+		pt_of_rotation.y = RotaPtMat.times(Vec.of(0,0,0,1))[1];
+		pt_of_rotation.z = RotaPtMat.times(Vec.of(0,0,0,1))[2];
+	}
 	//velocity verlet
 	//calculate current position from last frame's position, velocity, and acceleration
-	//goes first
 	velocity_verlet()
 	{
 		this.rotation.pitch += this.ang_vel.x * dt + (0.5 * this.ang_acc.x * (this.gs.animation_delta_time / 1000) * (this.gs.animation_delta_time / 1000));
@@ -156,8 +170,8 @@ class Physics
 		this.position.z = 2.0 * this.position.x * ((q[1] * q[3]) - (q[0] * q[2])) +
 						  2.0 * this.position.y * ((q[0] * q[1]) + (q[2] * q[3])) +
 						  this.position.z * ((q[0] * q[0]) - (q[1] * q[1]) - (q[2] * q[2]) + (q[3] * q[3]));
-		//update spiderman_Posvec and spiderman_Posmat from position
-		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
+		//update spiderman_PosMat from position
+		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([this.position.x - previous_pos_x,this.position.y - previous_pos_y,this.position.z - previous_pos_z]));
 		return this.spiderman_PosMat;
 	}
 }
