@@ -89,7 +89,7 @@ class Assignment_Four_Scene extends Scene_Component
 		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
 		//JUSTIN - Allow object to jump
-		this.key_triggered_button( "Jump", ["x"], () => { this.spiderman.physics_jump(); } );
+		this.key_triggered_button( "Jump", [ "q" ], () => this.spiderman.jump() );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -123,6 +123,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
 
+	  this.spiderman.update();
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
 	  // Create spiderman's AABB

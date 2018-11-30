@@ -19,29 +19,30 @@
 window.Physics = window.classes.Physics =
 class Physics
 {
-	constructor( graphics_state, spidermanUnscaledPosMat )
+	constructor( graphics_state, spidermanUnscaledPosMat)
 	{
-		Object.assign( this, {
-			globals: {gs: graphics_state},
-			locals : {spiderman_Posmat: spidermanUnscaledPosMat,
-					  spiderman_Posvec: Vec.of(0,0,0)}});
+		Object.assign( this, {gs: graphics_state, spiderman_PosMat: spidermanUnscaledPosMat});
 		this.mass = 70; //defined in kg
-		this.position = {x: 0, y: 0, z: 0 };
+		this.position = { x: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[0], 
+						  y: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[1],
+						  z: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2] };
 		this.ground_y = 1;
 		this.pt_of_rotation = {x: 0, y: 0, z: 0 };
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
-		this.gravity = -9.8; 
+		this.acc_grav = -9.8; 
 		this.radius = 0.5; //defined in length unit
 		this.rotation = {pitch: 0, roll: 0, yaw: 0 };
 		this.ang_vel = {x: 0, y: 0, z: 0 };
 		this.ang_acc = {x: 0, y: 0, z: 0 };
 		this.grounded = true;
-		//replace with real initial values
-		this.locals.spiderman_Posvec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
-		this.position.x = this.locals.spiderman_Posvec[0];
-		this.position.y = this.locals.spiderman_Posvec[1];
-		this.position.z = this.locals.spiderman_Posvec[2];
+	}
+	//update position function
+	update_pos(spidermanUnscaledPosMat){
+		this.spiderman_PosMat = spidermanUnscaledPosMat;
+		this.position.x = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[0], 
+		this.position.y = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[1],
+		this.position.z = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2]
 	}
 	//grav - so calculating motion after initial jump that gives y-velocity
 	//always called
@@ -52,11 +53,14 @@ class Physics
 	//return updated spiderman_Posmat using 
 	//spidermanUnscaledPosMat.times
 	//(Mat4.translation([0,this.velocity_y * this.gs.animation_delta_time / 1000, 0])
-	grav()
+	gravity(spidermanUnscaledPosMat)
 	{
-		this.velocity_y += this.gravity * this.gs.animation_delta_time / 1000;
+		//get updated spiderman_Posmat, spiderman_Posvec, position
+		var previous_pos_y = this.position.y;
+		//do calculation giving updated position and velocity
+		this.velocity_y += this.acc_grav * this.gs.animation_delta_time / 1000;
 		this.position.y += this.velocity_y * this.gs.animation_delta_time / 1000;
-		if(this.position.y < (this.ground + 0.01)){
+		if(this.position.y < (this.ground_y + 0.01)){
 			this.position.y = this.ground_y;
 			this.velocity_y = 0.0;
 			this.grounded = true;
@@ -64,25 +68,19 @@ class Physics
 		if(this.grounded == true){
 			this.velocity_y = 0.0;
 		}
+		//update spiderman_Posvec and spiderman_Posmat from position
+		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
+		return this.spiderman_PosMat;
 	}
 	//Should be fine, not high priority
 	//jumping -- only called when spacebar pressed
 	jump()
 	{
-		if (this.position.y < (this.ground_y + 0.01) || this.grounded == true){
+		if (this.position.y < this.ground_y || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
-			this.velocity_y = 5;
+			this.velocity_y = 10;
 			this.grounded = false;
 		}
-	}
-	//translate -- for translating position based on spiderman
-	translate( spidermanUnscaledPosMat ){
-		// Update local Spiderman matrix and position vector according to the new spidermanUnscaledPosMat
-		this.locals.spiderman_Posmat = spidermanUnscaledPosMat;
-		this.locals.spiderman_Posvec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
-		this.position.x = this.locals.spiderman_Posvec[0];
-		this.position.y = this.locals.spiderman_Posvec[1];
-		this.position.z = this.locals.spiderman_Posvec[2];
 	}
 	//velocity verlet
 	//calculate current position from last frame's position, velocity, and acceleration
@@ -146,6 +144,9 @@ class Physics
 	//uses a quaternion to find the new position
     findPosition(q)
 	{
+		var previous_x = this.position.x;
+		var previous_y = this.position.y;
+		var previous_z = this.position.z;
 		this.position.x = this.position.x * ((q[0] * q[0]) + (q[1] * q[1]) - (q[2] * q[2]) - (q[3] * q[3])) +
 						  2.0 * this.position.y * ((q[1]*q[2])-(q[0]*q[3])) +
 						  2.0 * this.position.z * ((q[0]*q[2])+(q[1]*q[3]));
@@ -154,6 +155,9 @@ class Physics
 						  2.0 * this.position.z * ((q[2]*q[3])-(q[0]*q[1]));
 		this.position.z = 2.0 * this.position.x * ((q[1] * q[3]) - (q[0] * q[2])) +
 						  2.0 * this.position.y * ((q[0] * q[1]) + (q[2] * q[3])) +
-						  this.position.z * ((q[0] * q[0]) - (q[1] * q[1]) - (q[2] * q[2]) + (q[3] * q[3]));	
+						  this.position.z * ((q[0] * q[0]) - (q[1] * q[1]) - (q[2] * q[2]) + (q[3] * q[3]));
+		//update spiderman_Posvec and spiderman_Posmat from position
+		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
+		return this.spiderman_PosMat;
 	}
 }

@@ -12,7 +12,7 @@ class Spiderman
   {
     Object.assign( this, { model_transform: Mat4.translation([0,1,0]),
                            camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
-						   physics: new Physics( graphics_state, Mat4.translation([0,1,0])), //added in the ability to move given physics
+                           physics: new Physics( graphics_state, Mat4.translation([0,1,0]) ),
                            gs: graphics_state } );
     //Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
   }
@@ -74,8 +74,8 @@ class Spiderman
     this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-distance) ) );
 	// Update camera
     this.camera.translate( this.model_transform );
-	//update physics
-	this.physics.translate( this.model_transform );
+    //update physical position
+    this.physics.update_pos( this.model_transform );
   }
   rotate( theta )
   {
@@ -92,11 +92,10 @@ class Spiderman
   
   //jump function that will call the physics class jump function
   //should only be called when button pressed
-  physics_jump(){ this.physics.jump(); }
+  jump(){ this.physics.jump(); }
   
-  //fall function that will call physics class fall function
-  //should occur every scene
-  physics_gravity(){ this.physics.grav(); }
+  //update/gravity
+  update(){ this.model_transform = this.physics.gravity(this.model_transform); }
   
   // Direct camera functions
   camera_swivel( mouseEvent ) { this.camera.swivel( mouseEvent ); }
