@@ -12,7 +12,6 @@
 <script src= "building.js" ></script>
 <script src= "world-transforms.js" ></script>
 <script src= "collision-manager.js" ></script>
-<script src= "scene-graph.js" ></script>
 <script src= "main-scene.js" ></script></head>
 <body style="background: DarkGray">       <!-- Begin typing your web page here. //-->
 
