@@ -19,12 +19,15 @@
 window.Physics = window.classes.Physics =
 class Physics
 {
-	constructor( graphics_state )
+	constructor( graphics_state, spidermanUnscaledPosMat )
 	{
-		Object.assign( this, { model_transform: Mat4.translation([0,1,0]), camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
-                           gs: graphics_state } );
+		Object.assign( this, {
+			globals: {gs: graphics_state},
+			locals : {spiderman_Posmat: spidermanUnscaledPosMat,
+					  spiderman_Posvec: Vec.of(0,0,0)}});
 		this.mass = 70; //defined in kg
 		this.position = {x: 0, y: 0, z: 0 };
+		this.ground_y = 1;
 		this.pt_of_rotation = {x: 0, y: 0, z: 0 };
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
@@ -33,22 +36,53 @@ class Physics
 		this.rotation = {pitch: 0, roll: 0, yaw: 0 };
 		this.ang_vel = {x: 0, y: 0, z: 0 };
 		this.ang_acc = {x: 0, y: 0, z: 0 };
+		this.grounded = true;
+		//replace with real initial values
+		this.locals.spiderman_Posvec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
+		this.position.x = this.locals.spiderman_Posvec[0];
+		this.position.y = this.locals.spiderman_Posvec[1];
+		this.position.z = this.locals.spiderman_Posvec[2];
 	}
-	//jumping
+	//grav - so calculating motion after initial jump that gives y-velocity
+	//always called
+	//TODO
+	//add spidermanUnscaledPosMat as an argument
+	//translate(spidermanUnscaledPosMat) --> gives updated position 
+	//do calculation changing position, spiderman_Posmat, spiderman_Posvec <-- get rid of position later and base all on spiderman_Posvec
+	//return updated spiderman_Posmat using 
+	//spidermanUnscaledPosMat.times
+	//(Mat4.translation([0,this.velocity_y * this.gs.animation_delta_time / 1000, 0])
+	grav()
+	{
+		this.velocity_y += this.gravity * this.gs.animation_delta_time / 1000;
+		this.position.y += this.velocity_y * this.gs.animation_delta_time / 1000;
+		if(this.position.y < (this.ground + 0.01)){
+			this.position.y = this.ground_y;
+			this.velocity_y = 0.0;
+			this.grounded = true;
+		}
+		if(this.grounded == true){
+			this.velocity_y = 0.0;
+		}
+	}
+	//Should be fine, not high priority
+	//jumping -- only called when spacebar pressed
 	jump()
 	{
-		if (this.position.y < 0.1 /*or is on the ground of some building*/){
+		if (this.position.y < (this.ground_y + 0.01) || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
-			this.velocity_y = 30;
+			this.velocity_y = 5;
+			this.grounded = false;
 		}
 	}
-	//falling - so calculating motion after initial jump that gives y-velocity
-	fall()
-	{
-		while(this.position.y >= 0.1 /*or is collided with building on y-side*/)
-		{
-			this.velocity_y += gravity * this.gs.animation_delta_time / 1000;
-		}
+	//translate -- for translating position based on spiderman
+	translate( spidermanUnscaledPosMat ){
+		// Update local Spiderman matrix and position vector according to the new spidermanUnscaledPosMat
+		this.locals.spiderman_Posmat = spidermanUnscaledPosMat;
+		this.locals.spiderman_Posvec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
+		this.position.x = this.locals.spiderman_Posvec[0];
+		this.position.y = this.locals.spiderman_Posvec[1];
+		this.position.z = this.locals.spiderman_Posvec[2];
 	}
 	//velocity verlet
 	//calculate current position from last frame's position, velocity, and acceleration
@@ -63,15 +97,14 @@ class Physics
 	//calculate the angular acceleration as inverse of moment of inertia times torque vector, giving components 
 	//calculate the angular velocity component-wise using previous and current angular acceleration
 	//update pitch, roll, yaw
+	//function should only be called when y-position is greater than 0.1 or grounded is false
 	update_ang_comp()
 	{
 		//find the force vector which will be perpendicular to the xz components of the pt of rotation-position vector
 		var mag_force = this.mass * (this.velocity_xz)/4.0;
 		var z_component = -(this.position.x - this.pt_of_rotation.x)/(this.position.z - this.pt_of_rotation.z);
-		if (this.position.y > 0.1 /*or is not collided on y-side of building*/){
 			T = Vec.of(this.position.x - this.pt_of_rotation.x,this.position.y  - this.pt_of_rotation.y,this.position.z -  - this.pt_of_rotation.z)
 			.cross(Vec.of(1.0,this.gravity,z_component));
-		}
 		//calculate the moment of inertia, assuming a sphere b/c why not
 		var J = [[0.4 * this.mass * this.radius, 0.0, 0.0],
 				 [0.0, 0.4 * this.mass * this.radius, 0.0],

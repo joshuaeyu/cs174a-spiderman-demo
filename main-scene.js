@@ -13,9 +13,7 @@ class Assignment_Four_Scene extends Scene_Component
       		building:   new Cube(),
       		wall: 	new Cube(),
       		spiderman:  new Cube(),
-      		AABB: new Cube(),
-      		lamp: new lamp(),
-      		ball: new Subdivision_Sphere(4)
+      		AABB: 		new Cube()
       }
       this.submit_shapes( context, shapes );
 
@@ -24,7 +22,6 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
-      	light: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1)),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.25) ),
       	buildings: [
 			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/1.png", true) } ),
@@ -91,58 +88,12 @@ class Assignment_Four_Scene extends Scene_Component
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
 		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
+		//JUSTIN - Allow object to jump
+		this.key_triggered_button( "Jump", ["x"], () => { this.spiderman.physics_jump(); } );
     }
     display( graphics_state )
-    {graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
+    { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
       const t = graphics_state.animation_time / 1000, dt = graphics_state.animation_delta_time / 1000;
-
-      // Sorry for the confusing layout. The ground is based at a height of -1. You can shift it up if you'd like, it would only change our overall max height.
-      // The south wall and ceiling are commented out so you can see inside the boundaries. The more complicated model doesn't use a for loop so each building 
-      // can be adjusted to look more reailistic.
-      this.shapes.lamp.draw(graphics_state,Mat4.identity().times(Mat4.translation([3,4,4])),this.materials.gray);
-      this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
-	  this.shapes.ground.draw( graphics_state, Mat4.scale(Vec.of(50,1,50)).times(Mat4.translation(Vec.of(0,-2,0))), this.materials.silver);
-	  this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(50,50,1)).times(Mat4.translation(Vec.of(0,0.98,-51))), this.materials.white);	// North Wall
-	  this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(1,50,50)).times(Mat4.translation(Vec.of(-51,0.98,0))), this.materials.gray);		// West Wall
-	  this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(1,50,50)).times(Mat4.translation(Vec.of(51,0.98,0))), this.materials.gray);		// East Wall
-	  //this.shapes.boundary.draw( graphics_state, Mat4.scale(Vec.of(50,50,1)).times(Mat4.translation(Vec.of(0,0.98,51))), this.materials.white);		// South Wall
-	  //this.shapes.ground.draw( graphics_state, Mat4.scale(Vec.of(50,1,50)).times(Mat4.translation(Vec.of(0,98,0))), this.materials.silver);		// Ceiling
-
-      /*
-      //Beginning of a more complicated model
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-25,15,-33)).times(Mat4.scale(Vec.of(3,16,4))), this.materials.tan);
-	  this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-25,15,-33)).times(Mat4.scale(Vec.of(3,16,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-25,19,-44)).times(Mat4.scale(Vec.of(2,20,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-25,15,-25)).times(Mat4.scale(Vec.of(4,16,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-25,13,-10)).times(Mat4.scale(Vec.of(5,14,3))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-26, 7,  3)).times(Mat4.scale(Vec.of(2,8,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-18, 6,  3)).times(Mat4.scale(Vec.of(2,7,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-22,10,  15)).times(Mat4.scale(Vec.of(3,11,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-28,8,  25)).times(Mat4.scale(Vec.of(2,9,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-19,13, 24)).times(Mat4.scale(Vec.of(4,12,3))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-20,19,34)).times(Mat4.scale(Vec.of(2,20,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-34,8, 37)).times(Mat4.scale(Vec.of(6,9,2))), this.materials.tan);
-       
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-39,17,-44)).times(Mat4.scale(Vec.of(2,18,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-38,13,-33)).times(Mat4.scale(Vec.of(3,14,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-39,9,-22)).times(Mat4.scale(Vec.of(6,10,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-36,4,-12)).times(Mat4.scale(Vec.of(2,5,3))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-38,21,0)).times(Mat4.scale(Vec.of(3,22,3))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-36,16,17)).times(Mat4.scale(Vec.of(2,17,8))), this.materials.tan);
-
-	  this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(0,9,0)).times(Mat4.scale(Vec.of(2,10,3))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(8,2,2)).times(Mat4.scale(Vec.of(1,3,4))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(0,13,10)).times(Mat4.scale(Vec.of(2,14,2))), this.materials.tan);
-      this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(-1,12,-13)).times(Mat4.scale(Vec.of(4,13,2))), this.materials.tan);
-      */
-
-	  // Simple Model
-	  /*
-	  var i, j;
-	  for (i = -40; i < 50; i+=10)
-	  	for (j = -40; j < 50; j+=10)
-	  		this.shapes.building.draw( graphics_state, Mat4.translation(Vec.of(i,9,j)).times(Mat4.scale(Vec.of(2,10,2))), this.materials.tan);
-	  */
      
 	  const allWorldTransforms = this.worldTransforms.getTransforms();
 
@@ -177,7 +128,9 @@ class Assignment_Four_Scene extends Scene_Component
 	  // Create spiderman's AABB
 	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
-
+	  
+	  //JUSTIN - turn gravity on
+	  this.spiderman.get_position();
 	  // Check input and move Spiderman for the next frame
 	  const gapCollisionDetection = true; // if true, there will be gap between colliding objects
 	  for (let dirString in this.movement_directions) {

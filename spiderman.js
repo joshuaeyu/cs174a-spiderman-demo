@@ -12,10 +12,11 @@ class Spiderman
   {
     Object.assign( this, { model_transform: Mat4.translation([0,1,0]),
                            camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
+						   physics: new Physics( graphics_state, Mat4.translation([0,1,0])), //added in the ability to move given physics
                            gs: graphics_state } );
-    Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
+    //Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
   }
-  physics_move( displacement_Vec, distance = this.VELOCITY * this.gs.animation_delta_time/1000 )
+  physics_move( displacement_Vec, distance = this.physics.velocity_xz * this.gs.animation_delta_time/1000 ) //use velocity derived from physics class
   {
     this.model_transform = this.model_transform.times( Mat4.translation( displacement_Vec.times(distance) ) );
     this.camera.translate( this.model_transform );
@@ -24,7 +25,7 @@ class Spiderman
   {
     // Gladys - exactly Josh's keyboard_move() except it doesn't change Spiderman. Instead, returns Spiderman's new would-be position.
     // Used for predicting AABB collisions
-    let distance = this.VELOCITY * this.gs.animation_delta_time / 1000; 
+    let distance = this.physics.velocity_xz * this.gs.animation_delta_time / 1000; //use velocity derived from physics class
     let rotation_mult = 0;
     switch ( direction )
     {
@@ -47,9 +48,10 @@ class Spiderman
     return this.model_transform.times(  Mat4.rotation(theta, Vec.of(0,1,0)) )
                                .times( Mat4.translation(Vec.of(0,0,-distance) ) );
   }
+  //needs to be a jump option so spiderman can just jump in place
   keyboard_move( direction )
   {
-    let distance = this.VELOCITY * this.gs.animation_delta_time / 1000; 
+    let distance = this.physics.velocity_xz * this.gs.animation_delta_time / 1000; 
     let rotation_mult = 0;
     switch ( direction )
     {
@@ -70,9 +72,10 @@ class Spiderman
     theta = Math.acos( dot_product ) * CCW_or_CW; // Theta becomes negative if movement_vector is CW of spiderman_orientation
     this.rotate( theta );
     this.model_transform = this.model_transform.times( Mat4.translation(Vec.of(0,0,-distance) ) );
-    
-    // Update camera
+	// Update camera
     this.camera.translate( this.model_transform );
+	//update physics
+	this.physics.translate( this.model_transform );
   }
   rotate( theta )
   {
@@ -80,7 +83,21 @@ class Spiderman
     this.model_transform = this.model_transform.times( Mat4.rotation(theta, Vec.of(0,1,0)) );
     this.camera.rotate_subject( theta );
   }
-
+  
+  //get position
+  get_position(){
+	//From this model transform, will need to use that to get the position and update position in the physics instance in this object
+	console.log("x: " + this.physics.position.x + " y: " + this.physics.position.y + " z: " + this.physics.position.z );
+  }
+  
+  //jump function that will call the physics class jump function
+  //should only be called when button pressed
+  physics_jump(){ this.physics.jump(); }
+  
+  //fall function that will call physics class fall function
+  //should occur every scene
+  physics_gravity(){ this.physics.grav(); }
+  
   // Direct camera functions
   camera_swivel( mouseEvent ) { this.camera.swivel( mouseEvent ); }
   camera_toggle_birdseye() { this.camera.toggle_birdseye(); }
