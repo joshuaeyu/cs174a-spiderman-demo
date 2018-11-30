@@ -25,7 +25,7 @@ class WorldTransforms {
         south: Mat4.scale(Vec.of(len,height,1)).times(Mat4.translation(Vec.of(0,1,len))),
         west: Mat4.scale(Vec.of(1,height,len)).times(Mat4.translation(Vec.of(-1*len,1,0))),
         east: Mat4.scale(Vec.of(1,height,len)).times(Mat4.translation(Vec.of(len,1,0))),
-        ground: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(len,-1,0))),
+        ground: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(0,-1.00001,0))),
         ceiling: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(0,height,0)))
       },
       buildings: []

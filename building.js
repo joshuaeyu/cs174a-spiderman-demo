@@ -1,18 +1,14 @@
 window.Building = window.classes.Building = 
 class Building {
-  constructor( material, transform, aabb ) {
+  constructor( material, transform ) {
     this.material = material;
     this.transform = transform;
-    this.aabb = aabb;
   }
   get_material() {
     return this.material;
   }
   get_transform() {
     return this.transform;
-  }
-  get_aabb() {
-    return this.aabb;
   }
 }
 

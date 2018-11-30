@@ -1,6 +1,8 @@
-// Represents an AABB by its XYZ axes bounds and the transform matrix of the shape it surrounds.
+// Represents an AABB by its GLOBAL (i.e. not relative to anything) XYZ axes bounds and the transform matrix of the shape it surrounds.
 window.AABB = window.classes.AABB =
 class AABB {
+  // minX, maxX, minY, etc.: the GLOBAL XYZ bounds of the AABB.
+  // baseMatrix: the transform matrix of the shape this AABB surrounds. If the shape has subparts, use the matrix that you'd use to move the entire shape.
   // Note: usually won't use this to create a new AABB. Instead, call the static method AABB.generateAABBFromPoints(..)
   constructor( minX, maxX, minY, maxY, minZ, maxZ, baseMatrix ) {
     this.minX = minX;
@@ -12,12 +14,32 @@ class AABB {
     this.baseMatrix = baseMatrix;
   }
 
-  // Returns the AABB's transform matrix used to draw an AABB scaled according to its mins/maxes and centered at its baseMatrix.
+  /*
+  // Updates AABB's transform based on a baseMatrix change to the shape it surrounds.
+  updateTransformFromBaseChange( changeMatrix ) {
+    const baseShapeCenter = this.baseMatrix.times(Vec.of(0,0,0));
+    const toBaseCenterTransform = Mat4.translation(baseShapeCenter);
+    const newTransform = this.getTransformMatrix().times(toBaseCenterTransform).times(changeMatrix).times
+    const vecMinX = Vec.of(this.minX,baseShapeCenter[1],baseShapeCenter[2]);
+    const vecNewMinX = changeMatrix.times(vecMinX);
+    const diffX = vecMinX.dot(vecNewMinX);
+    this.minX = this.minX+diffX;
+    this.maxX = this.maxX+diffX;
+
+  }
+  */
+
+  // Returns the AABB's center based on its axes bounds.
+  getCenter() {
+    const halfDiffX = (this.maxX-this.minX)/2., halfDiffY = (this.maxY-this.minY)/2., halfDiffZ = (this.maxZ-this.minZ)/2.;
+    return Vec.of(this.minX+halfDiffX,this.minY+halfDiffY,this.minZ+halfDiffZ, 1);
+  }
+
+  // Returns the AABB's transform matrix used to draw an AABB scaled according to its mins/maxes.
   getTransformMatrix() {
-    const center = this.baseMatrix.times(Vec.of(0,0,0,1));
-    return Mat4.identity()
-	  	.times(Mat4.translation(center))
-	  	.times(Mat4.scale([(this.maxX-this.minX)/1.96, (this.maxY-this.minY)/1.96, (this.maxZ-this.minZ)/1.96]));
+    const halfDiffX = (this.maxX-this.minX)/2., halfDiffY = (this.maxY-this.minY)/2., halfDiffZ = (this.maxZ-this.minZ)/2.;
+    const center = this.getCenter();
+    return Mat4.identity().times(Mat4.translation(center)).times(Mat4.scale([halfDiffX*2./1.96, halfDiffY*2./1.96, halfDiffZ*2./1.96]));
   }
 
   // Returns the smallest AABB for a shape based on the shape's points and transform matrix.
@@ -59,7 +81,7 @@ class AABB {
   //   MUST use the names "positions" and "transform" for each subshape's points and matrix. Other names are just to help you.
   //   Order of subshapes doesn't matter.
   static generateAABBFromShapes( shapes ) {
-    if (Object.keys(shapes).length === 0) return undefined;
+    if (Object.keys(shapes).length === 0) return {};
 
     let minx, maxx, miny, maxy, minz, maxz;
     for (let subshapeStr in shapes) {
