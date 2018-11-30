@@ -14,6 +14,7 @@ class Spiderman
                            camera: new Camera( graphics_state, Mat4.translation([0,1,0]) ),
                            physics: new Physics( graphics_state, Mat4.translation([0,1,0]) ),
                            gs: graphics_state } );
+	this.webbed = false;
     //Object.defineProperty( this, 'VELOCITY', { value: 10,  writable: false } ); // Adjustable
   }
   physics_move( displacement_Vec, distance = this.physics.velocity_xz * this.gs.animation_delta_time/1000 ) //use velocity derived from physics class
@@ -93,11 +94,20 @@ class Spiderman
   
   //jump function that will call the physics class jump function
   //should only be called when button pressed
-  jump(){ this.physics.jump(); }
-  
+  jump(){ this.physics.jump(); };
+  update(){		this.model_transform = this.physics.gravity(this.model_transform);  this.camera.translate(this.model_transform)}
+/*//----------------------------------------------------------------------------------//  
   //update/gravity
-  update(){ this.model_transform = this.physics.gravity(this.model_transform); }
-  
+  update(){
+	if (this.webbed == false){
+		this.model_transform = this.physics.gravity(this.model_transform);
+		this.physics.reset_angular();
+	}
+	else{
+		this.model_transform = this.physics.run_angular(this.model_transform);
+	}  
+  }
+//----------------------------------------------------------------------------------//  */
   // Direct camera functions
   camera_swivel( mouseEvent ) { this.camera.swivel( mouseEvent ); }
   camera_toggle_birdseye() { this.camera.toggle_birdseye(); }

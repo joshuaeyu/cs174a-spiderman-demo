@@ -9,7 +9,7 @@ class Physics
 		this.position = { x: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[0], 
 						  y: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[1],
 						  z: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2] };
-		this.ground_y = 1;
+		this.permanent_ground = 1;
 		this.pt_of_rotation = {x: 0, y: 0, z: 0 };
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
@@ -29,13 +29,7 @@ class Physics
 		this.position.z = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2]
 	}
 	//update ground function, used for when sticking
-	update_ground(){
-		this.ground_y = this.position.y;
-	}
 	//reset ground function, used for when he is not sticking
-	reset_ground(){
-		this.ground_y = 1;
-	}
 	//grav - so calculating motion after initial jump that gives y-velocity
 	//always called
 	gravity(spidermanUnscaledPosMat)
@@ -45,14 +39,12 @@ class Physics
 		//do calculation giving updated position and velocity
 		this.velocity_y += this.acc_grav * this.gs.animation_delta_time / 1000;
 		this.position.y += this.velocity_y * this.gs.animation_delta_time / 1000;
-		if(this.position.y < (this.ground_y + 0.01)){
-			this.position.y = this.ground_y;
+		//for if on  global ground
+		if(this.position.y < (this.permanent_ground + 0.01)){
+			this.position.y = this.permanent_ground;
 			this.velocity_xz = 10.0; //can have a higher velocity when in air like swinging but will only have one speed on ground
 			this.velocity_y = 0.0;
 			this.grounded = true;
-		}
-		if(this.grounded == true){
-			this.velocity_y = 0.0;
 		}
 		//update spiderman_Posvec and spiderman_Posmat from position
 		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
@@ -62,7 +54,7 @@ class Physics
 	//jumping -- only called when spacebar pressed
 	jump()
 	{
-		if (this.position.y < this.ground_y || this.grounded == true){
+		if (this.position.y < this.permanent_ground || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
 			this.velocity_y = 10;
 			this.grounded = false;
@@ -76,11 +68,17 @@ class Physics
 	//findPosition() -- uses quaternion to give you new position
 	//-----------------------------SEQUENCE OF OPERATIONS FOR SWINGING---------------------------//
 	
-	//get the point of rotation, should only have to run once or just run every time but same input
-	get_pt_of_rotation(RotaPtMat){
-		pt_of_rotation.x = RotaPtMat.times(Vec.of(0,0,0,1))[0];
-		pt_of_rotation.y = RotaPtMat.times(Vec.of(0,0,0,1))[1];
-		pt_of_rotation.z = RotaPtMat.times(Vec.of(0,0,0,1))[2];
+	//set the point of rotation, should only have to run once 
+	set_pt_of_rotation(){
+		pt_of_rotation.x = this.position.x;
+		pt_of_rotation.y = this.position.y - 100;
+		pt_of_rotation.z = this.position.z;
+	}
+	//reset the point of rotation
+	reset_pt_of_rotation(){
+		pt_of_rotation.x = 0;
+		pt_of_rotation.y = 0;
+		pt_of_rotation.z = 0;
 	}
 	//velocity verlet
 	//calculate current position from last frame's position, velocity, and acceleration
@@ -158,5 +156,24 @@ class Physics
 		//update spiderman_PosMat from position
 		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([this.position.x - previous_pos_x,this.position.y - previous_pos_y,this.position.z - previous_pos_z]));
 		return this.spiderman_PosMat;
+	}
+	//run all angular components
+	run_angular(spidermanUnscaledPosMat){
+		velocity_verlet();
+		update_ang_comp();
+		var quat = toQuaternion();
+		return findPosition(quat);
+	}
+	//reset all angular components to 0
+	reset_angular(){
+		this.rotation.pitch = 0;
+		this.rotation.pitch = 0;
+		this.rotation.pitch = 0;
+		this.ang_vel.x = 0;
+		this.ang_vel.y = 0;
+		this.ang_vel.z = 0;
+		this.ang_acc.x = 0;
+		this.ang_acc.y = 0;
+		this.ang_acc.z = 0;
 	}
 }
