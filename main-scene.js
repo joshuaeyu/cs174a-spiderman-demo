@@ -15,6 +15,7 @@ class Assignment_Four_Scene extends Scene_Component
       		ground:		new Cube(),
       		building:   new Cube(),
       		wall: 	    new Cube(),
+      		boundary: 	new Cube(),
       		spiderman:  new Cube(),
       		AABB: 		new Cube(),
       		lamp: new Lamp(),
@@ -320,13 +321,18 @@ class Assignment_Four_Scene extends Scene_Component
 				this.spiderman.keyboard_move(dirString);
 			}
 			else {
+				//if hit boundary, highlight it
+				const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
+				if (boundaryTransform != null) {
+					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
+				}
 				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
 				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
 				if (buildingTransform != null) {
 					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
 				}
 				//JOSH demo #2: how to use the function to check if camera is within a building
-				console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
+				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
 			}
 		 }
 	  }

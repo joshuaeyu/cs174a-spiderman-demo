@@ -49,6 +49,15 @@ class CollisionManager {
 
   */
   constructor(boundaries, buildings, lampposts, spiderman, people, cars, web) {
+    // Set up "cache" for extracting exactly what spiderman hits
+    this.hitTargetsTransform = {
+      boundary: null,
+      building: null,
+      lamppost: null,
+      person: null,
+      car: null
+    }
+
     //Generate and save all AABBs
     this.AABBs = {};
     
@@ -91,9 +100,7 @@ class CollisionManager {
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
   regenerateSpidermanAABB(spidermanShape) {
-    console.log('flag1');
     this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape);
-    console.log('flag2');
   }
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
@@ -117,6 +124,13 @@ class CollisionManager {
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
   tryMoveSpiderman(spidermanShape) {
     const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+    this.hitTargetsTransform = {
+      boundary: null,
+      building: null,
+      lamppost: null,
+      person: null,
+      car: null
+    }
     let canMove = true;
 
     const boundaryAABBs = this.AABBs.boundaries;
@@ -124,6 +138,8 @@ class CollisionManager {
       const currAABB = boundaryAABBs[dirString];
       if (AABB.doAABBsIntersect(newSpidermanAABB, currAABB)) {
           canMove = false;
+          this.hitTargetsTransform.boundary = currAABB.baseMatrix;
+          break;
       }
     }
 
@@ -131,6 +147,8 @@ class CollisionManager {
     for (let i=0; i<buildingAABBs.length; i++) {
         if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABBs[i])) {
             canMove = false;
+            this.hitTargetsTransform.building = buildingAABBs[i].baseMatrix;
+            break;
         }
     }
 
@@ -138,6 +156,8 @@ class CollisionManager {
     for (let i=0; i<lamppostAABBs.length; i++) {
         if (AABB.doAABBsIntersect(newSpidermanAABB, lamppostAABBs[i])) {
             canMove = false;
+            this.hitTargetsTransform.lamppost = lamppostAABBs[i].baseMatrix;
+            break;
         }
     }
 
@@ -169,9 +189,16 @@ class CollisionManager {
       const buildingAABB = buildingAABBs[i];
       if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABB)) {
           buildingTransform = buildingAABB.baseMatrix;
+          break;
       }
     }
     return buildingTransform;
+  }
+
+  // gets the transform matrix of the boundary spiderman last hit. if none, returns null.
+  // should be called after tryMoveSpiderman() to be useful
+  getBoundaryThatSpidermanJustHit(spidermanShape) {
+    return this.hitTargetsTransform.boundary;
   }
 
   tryMovePerson(personShape) {
