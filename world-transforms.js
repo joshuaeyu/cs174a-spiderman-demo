@@ -28,7 +28,9 @@ class WorldTransforms {
         ground: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(0,-1.00001,0))),
         ceiling: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(0,height,0)))
       },
-      buildings: []
+      buildings: [],
+      people:   [],
+      cars: []
     };
 
     // building generation parameters. Change them here
@@ -40,7 +42,7 @@ class WorldTransforms {
     const buildingMaxHeight = 25;
 
     // world's grid code. Add your objects here, within a cell or something!
-    let numBuildings = 0;
+    let numBuildings = 0, numPeople = 0, numCars = 0;
     for (let x=gridLength/-2; x<=gridLength/2; x+=cellLength) {
       for (let y=gridLength/-2; y<=gridLength/2; y+=cellLength) {
         // generate and save building transforms
@@ -53,6 +55,11 @@ class WorldTransforms {
         }
 
         //todo: adding lampposts, etc
+        this.transforms.cars.push(Mat4.translation([x,0,y]));
+        numCars++;
+
+        this.transforms.people.push(Mat4.translation([x,0,y]));
+        numPeople++;
       }
     }
     console.log('Generated '+numBuildings+' buildings');

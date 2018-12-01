@@ -101,7 +101,7 @@ class CollisionManager {
     this.AABBs.people = [];
     for (let i=0; i<peopleShapes.length; i++) {
       const currShape = peopleShapes[i];
-      this.AABBs.peopleShapes.push(AABB.generateAABBFromShapes(currShape));
+      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape));
     }
   }
 
@@ -110,7 +110,7 @@ class CollisionManager {
     this.AABBs.cars = [];
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
-      this.AABBs.carsShapes.push(AABB.generateAABBFromShapes(currShape));
+      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape));
     }
   }
 
@@ -130,6 +130,20 @@ class CollisionManager {
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {
         if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABBs[i])) {
+            canMove = false;
+        }
+    }
+
+    const carsAABBs = this.AABBs.cars;
+    for (let i=0; i<carsAABBs.length; i++) {
+        if (AABB.doAABBsIntersect(newSpidermanAABB, carsAABBs[i])) {
+            canMove = false;
+        }
+    }
+
+    const peopleAABBs = this.AABBs.people;
+    for (let i=0; i<peopleAABBs.length; i++) {
+        if (AABB.doAABBsIntersect(newSpidermanAABB, peopleAABBs[i])) {
             canMove = false;
         }
     }

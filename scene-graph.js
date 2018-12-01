@@ -53,5 +53,4 @@ window.Node = window.classes.Node =
 	    for (i = 0; i != size; i++)
 		this.children[i].list_nodes(array);
 	}
-
-    }
+}
