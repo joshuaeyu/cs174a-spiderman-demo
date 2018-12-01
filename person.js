@@ -41,6 +41,6 @@ class Person {
   }
 
   move(person_matrix) {
-    this.torso.position = this.torso.position.times(person_matrix);
+    this.torso.position = person_matrix.times(this.torso.position); //this.torso.position.times(person_matrix);
   }
 }
