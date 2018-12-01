@@ -45,7 +45,7 @@ class Assignment_Four_Scene extends Scene_Component
       	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) )
       }
 
-		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
      
 	  // DANIEL - Cars and People
 	   //People
@@ -161,18 +161,17 @@ class Assignment_Four_Scene extends Scene_Component
 	  }
 
 	  //lampposts
-	  /*
 	  let lampShapes = [];
 	  const lampTransforms = this.worldTransforms.getTransforms().lampposts;
 	  for (let i=0; i<lampTransforms.length; i++) {
 	  	const lampTransform = lampTransforms[i];
 		lampShapes.push({
 			lamppost: {
-				positions: 
+				positions: this.shapes.lamp.positions,
+				transform: lampTransform
 			}
 		})
 	  }
-	  */
 
 	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
 	  const spidermanShape = {
@@ -217,7 +216,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, [], spidermanShape, [], [], null);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, [], [], null);
 
 	  // ============= end of static world generation
 
@@ -302,7 +301,6 @@ class Assignment_Four_Scene extends Scene_Component
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
 	  
 	  // GLADYS - draw justin's lamppost
-	  this.shapes.lamp.draw(graphics_state,Mat4.identity().times(Mat4.translation([0,4,0])),this.materials.gray);
 	  const lampTransforms = allWorldTransforms.lampposts;
 	  for (let i=0; i<lampTransforms.length; i++) {
 	  	const currTransform = lampTransforms[i];
@@ -328,7 +326,7 @@ class Assignment_Four_Scene extends Scene_Component
 					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
 				}
 				//JOSH demo #2: how to use the function to check if camera is within a building
-				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
+				console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
 			}
 		 }
 	  }

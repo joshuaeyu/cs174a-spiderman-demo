@@ -20,9 +20,9 @@ class CollisionManager {
         e.g. { north: { positions: [], transform: Mat4.identity() }, south: {....} ... }
       -buildings: array of all buildings in world
         e.g. [ { positions: [], transform: Mat4.identity() }, { positions: [], ...} ...]
-      -streetlamps: array of all streetlamps
+      -lampposts: array of all lampposts
         e.g. [ {
-                //1st streetlamp
+                //1st lampposts
                 pole: { positions: [], transform: Mat4 }, 
                 lightbulb: { positions: [], transform: Mat4 },
                 ...
@@ -48,7 +48,7 @@ class CollisionManager {
       -web: TODO since depends on web being line or not
 
   */
-  constructor(boundaries, buildings, streetlamps, spiderman, people, cars, web) {
+  constructor(boundaries, buildings, lampposts, spiderman, people, cars, web) {
     //Generate and save all AABBs
     this.AABBs = {};
     
@@ -71,10 +71,10 @@ class CollisionManager {
     }
 
     //streetlamps
-    this.AABBs.streetlamps = [];
-    for (let i=0; i<streetlamps.length; i++) {
-      const currShape = streetlamps[i];
-      this.AABBs.streetlamps.push(AABB.generateAABBFromShapes(currShape));
+    this.AABBs.lampposts = [];
+    for (let i=0; i<lampposts.length; i++) {
+      const currShape = lampposts[i];
+      this.AABBs.lampposts.push(AABB.generateAABBFromShapes(currShape));
     }
 
     //spiderman
@@ -101,7 +101,7 @@ class CollisionManager {
     this.AABBs.people = [];
     for (let i=0; i<peopleShapes.length; i++) {
       const currShape = peopleShapes[i];
-      this.AABBs.peopleShapes.push(AABB.generateAABBFromShapes(currShape));
+      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape));
     }
   }
 
@@ -110,7 +110,7 @@ class CollisionManager {
     this.AABBs.cars = [];
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
-      this.AABBs.carsShapes.push(AABB.generateAABBFromShapes(currShape));
+      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape));
     }
   }
 
@@ -130,6 +130,13 @@ class CollisionManager {
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {
         if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABBs[i])) {
+            canMove = false;
+        }
+    }
+
+    const lamppostAABBs = this.AABBs.lampposts;
+    for (let i=0; i<lamppostAABBs.length; i++) {
+        if (AABB.doAABBsIntersect(newSpidermanAABB, lamppostAABBs[i])) {
             canMove = false;
         }
     }
