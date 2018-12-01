@@ -20,9 +20,9 @@ class CollisionManager {
         e.g. { north: { positions: [], transform: Mat4.identity() }, south: {....} ... }
       -buildings: array of all buildings in world
         e.g. [ { positions: [], transform: Mat4.identity() }, { positions: [], ...} ...]
-      -streetlamps: array of all streetlamps
+      -lampposts: array of all lampposts
         e.g. [ {
-                //1st streetlamp
+                //1st lampposts
                 pole: { positions: [], transform: Mat4 }, 
                 lightbulb: { positions: [], transform: Mat4 },
                 ...
@@ -48,7 +48,16 @@ class CollisionManager {
       -web: TODO since depends on web being line or not
 
   */
-  constructor(boundaries, buildings, streetlamps, spiderman, people, cars, web) {
+  constructor(boundaries, buildings, lampposts, spiderman, people, cars, web) {
+    // Set up "cache" for extracting exactly what spiderman hits
+    this.hitTargetsTransform = {
+      boundary: null,
+      building: null,
+      lamppost: null,
+      person: null,
+      car: null
+    }
+
     //Generate and save all AABBs
     this.AABBs = {};
     
@@ -71,10 +80,10 @@ class CollisionManager {
     }
 
     //streetlamps
-    this.AABBs.streetlamps = [];
-    for (let i=0; i<streetlamps.length; i++) {
-      const currShape = streetlamps[i];
-      this.AABBs.streetlamps.push(AABB.generateAABBFromShapes(currShape));
+    this.AABBs.lampposts = [];
+    for (let i=0; i<lampposts.length; i++) {
+      const currShape = lampposts[i];
+      this.AABBs.lampposts.push(AABB.generateAABBFromShapes(currShape));
     }
 
     //spiderman
@@ -91,9 +100,7 @@ class CollisionManager {
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
   regenerateSpidermanAABB(spidermanShape) {
-    console.log('flag1');
     this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape);
-    console.log('flag2');
   }
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
@@ -117,6 +124,13 @@ class CollisionManager {
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
   tryMoveSpiderman(spidermanShape) {
     const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+    this.hitTargetsTransform = {
+      boundary: null,
+      building: null,
+      lamppost: null,
+      person: null,
+      car: null
+    }
     let canMove = true;
 
     const boundaryAABBs = this.AABBs.boundaries;
@@ -124,6 +138,8 @@ class CollisionManager {
       const currAABB = boundaryAABBs[dirString];
       if (AABB.doAABBsIntersect(newSpidermanAABB, currAABB)) {
           canMove = false;
+          this.hitTargetsTransform.boundary = currAABB.baseMatrix;
+          break;
       }
     }
 
@@ -131,6 +147,17 @@ class CollisionManager {
     for (let i=0; i<buildingAABBs.length; i++) {
         if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABBs[i])) {
             canMove = false;
+            this.hitTargetsTransform.building = buildingAABBs[i].baseMatrix;
+            break;
+        }
+    }
+
+    const lamppostAABBs = this.AABBs.lampposts;
+    for (let i=0; i<lamppostAABBs.length; i++) {
+        if (AABB.doAABBsIntersect(newSpidermanAABB, lamppostAABBs[i])) {
+            canMove = false;
+            this.hitTargetsTransform.lamppost = lamppostAABBs[i].baseMatrix;
+            break;
         }
     }
 
@@ -149,6 +176,43 @@ class CollisionManager {
     }
 
     return canMove;
+  }
+
+  // returns true if the camera is within a building
+  isCameraWithinBuilding(cameraPos) {
+    //const cameraPos = cameraTransform.times(Vec.of(0,0,0,1));
+    //console.log("Camera pos: "+cameraPos);
+    const buildingAABBs = this.AABBs.buildings;
+    for (let i=0; i<buildingAABBs.length; i++) {
+      const buildingAABB = buildingAABBs[i];
+      if (buildingAABB.minX <= cameraPos[0] && buildingAABB.maxX >= cameraPos[0]
+          && buildingAABB.minY <= cameraPos[1] && buildingAABB.maxY >= cameraPos[1]
+          && buildingAABB.minZ <= cameraPos[2] && buildingAABB.maxZ >= cameraPos[2]) {
+          return true;
+      }
+    }
+    return false;
+  }
+
+  // returns the transform matrix of the building spiderman is hitting. if none, returns null
+  findBuildingThatSpidermanHits(spidermanShape) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+    let buildingTransform = null;
+    const buildingAABBs = this.AABBs.buildings;
+    for (let i=0; i<buildingAABBs.length; i++) {
+      const buildingAABB = buildingAABBs[i];
+      if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABB)) {
+          buildingTransform = buildingAABB.baseMatrix;
+          break;
+      }
+    }
+    return buildingTransform;
+  }
+
+  // gets the transform matrix of the boundary spiderman last hit. if none, returns null.
+  // should be called after tryMoveSpiderman() to be useful
+  getBoundaryThatSpidermanJustHit() {
+    return this.hitTargetsTransform.boundary;
   }
 
   tryMovePerson(personShape) {

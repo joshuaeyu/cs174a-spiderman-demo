@@ -29,6 +29,7 @@ class WorldTransforms {
         ceiling: Mat4.scale(Vec.of(len,1,len)).times(Mat4.translation(Vec.of(0,height,0)))
       },
       buildings: [],
+      lampposts: [],
       people:   [],
       cars: []
     };
@@ -41,8 +42,14 @@ class WorldTransforms {
     const buildingMinHeight = 18;
     const buildingMaxHeight = 25;
 
+    // lamppost generation parameters
+    const numCellsBetweenLamps = 3;
+    const lampOffset = 10;
+
     // world's grid code. Add your objects here, within a cell or something!
-    let numBuildings = 0, numPeople = 0, numCars = 0;
+    let numBuildings = 0;
+    let lampCellCounter = 0;
+    let numPeople = 0, numCars = 0;
     for (let x=gridLength/-2; x<=gridLength/2; x+=cellLength) {
       for (let y=gridLength/-2; y<=gridLength/2; y+=cellLength) {
         // generate and save building transforms
@@ -53,8 +60,7 @@ class WorldTransforms {
           this.transforms.buildings.push(buildingTransform);
           numBuildings++;
         }
-
-        //todo: adding lampposts, etc
+        //todo: adding PPL, etc
         this.transforms.cars.push(Mat4.translation([x,0,y]));
         numCars++;
 
@@ -63,6 +69,26 @@ class WorldTransforms {
       }
     }
     console.log('Generated '+numBuildings+' buildings');
+
+    // draw lamps
+    for (let x=gridLength/-2; x<gridLength/2; x+=cellLength*numCellsBetweenLamps) {
+      for (let y=gridLength/-2; y<gridLength/2; y+=cellLength*numCellsBetweenLamps) { 
+        const rLampTransform = Mat4.identity().times(Mat4.translation([x+cellLength-lampOffset,5,y+cellLength/2.-lampOffset]));
+        const rOppositeLampTransform = Mat4.identity()
+          .times(Mat4.translation([x+cellLength+lampOffset,5,y+cellLength/2.-lampOffset]))
+          .times(Mat4.rotation(Math.PI, Vec.of(0,1,0)));
+        const bLampTransform = Mat4.identity()
+          .times(Mat4.translation([x+cellLength/2.-lampOffset,5,y+cellLength-lampOffset]))
+          .times(Mat4.rotation(Math.PI/-2., Vec.of(0,1,0)));
+        const bOppositeLampTransform = Mat4.identity()
+          .times(Mat4.translation([x+cellLength/2.-lampOffset,5,y+cellLength+lampOffset]))
+          .times(Mat4.rotation(Math.PI/2., Vec.of(0,1,0)));
+        this.transforms.lampposts.push(rLampTransform);
+        this.transforms.lampposts.push(rOppositeLampTransform);
+        this.transforms.lampposts.push(bLampTransform);
+        this.transforms.lampposts.push(bOppositeLampTransform);
+      }
+    }
   }
   getTransforms() {
     return this.transforms;
