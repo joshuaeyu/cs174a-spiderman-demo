@@ -292,6 +292,16 @@ class Grid_Sphere extends Shape                         // With lattitude / long
         Surface_Of_Revolution.insert_transformed_copy_into( this, [ rows, columns, semi_circle_points, texture_range ] );
       } }
 
+window.Half_Sphere = window.classes.Half_Sphere =
+class Half_Sphere extends Shape                         // With lattitude / longitude divisions; this means singularities are at 
+  { constructor( rows, columns, texture_range )         // the mesh's top and bottom.  Subdivision_Sphere is a better alternative.
+      { super( "positions", "normals", "texture_coords" );
+        const semi_circle_points = Array( rows ).fill( Vec.of( 0,0,1 ) ).map( (x,i,a) =>
+                                    Mat4.rotation( i/(a.length-1) * Math.PI/2, Vec.of( 1,0,0 ) ).times( x.to4(1) ).to3() );
+        
+        Surface_Of_Revolution.insert_transformed_copy_into( this, [ rows, columns, semi_circle_points, texture_range ] );
+      } }
+
 window.Closed_Cone = window.classes.Closed_Cone =
 class Closed_Cone extends Shape     // Combine a cone tip and a regular polygon to make a closed cone.
   { constructor( rows, columns, texture_range )

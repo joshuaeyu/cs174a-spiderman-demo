@@ -16,7 +16,9 @@ class Assignment_Four_Scene extends Scene_Component
       		building:   new Cube(),
       		wall: 	    new Cube(),
       		spiderman:  new Cube(),
-      		AABB: 		new Cube()
+      		AABB: 		new Cube(),
+      		lamp: new Lamp(),
+      		ball: new Subdivision_Sphere(4)
       }
       this.submit_shapes( context, shapes );
 
@@ -25,6 +27,7 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
+      	light: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1)),
       	black: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1) ),
       	yellow:context.get_instance( Phong_Shader ).material( Color.of (1,1,0,1) ),
       	red:   context.get_instance( Phong_Shader ).material( Color.of (1,0.2,0.2,1) ),
@@ -157,6 +160,20 @@ class Assignment_Four_Scene extends Scene_Component
       	  this.buildings.push(new Building(buildingMat, buildingTransform));
 	  }
 
+	  //lampposts
+	  /*
+	  let lampShapes = [];
+	  const lampTransforms = this.worldTransforms.getTransforms().lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const lampTransform = lampTransforms[i];
+		lampShapes.push({
+			lamppost: {
+				positions: 
+			}
+		})
+	  }
+	  */
+
 	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
 	  const spidermanShape = {
 	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
@@ -284,28 +301,14 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
 
-	  /* ignore this demo, you shouldnt need to generate AABBs anymore. keeping it for myself now lol -gladys
-	  // Demo to show how to generate an AABB for multi-shaped object. hopefully useful for streetlamps, scene graph stuff
-	  // note: not added to collision manager, so no actual collision detection
-	  const multiShapeAABBDemo = false; //switch to true to turn demo on
-	  if (multiShapeAABBDemo) {
-		  this.baseBoxTransform = Mat4.identity().times(Mat4.translation(Vec.of(4,1,4)));
-		  this.topBoxTransform = this.baseBoxTransform.times(Mat4.translation(Vec.of(0,5,0))).times(Mat4.scale([0.5,1,0.5]));
-		  this.demoTestAABB = AABB.generateAABBFromShapes({
-			 base: {
-				 positions: this.shapes.ground.positions,
-				 transform: this.baseBoxTransform
-			 },
-			 top: {
-				 positions: this.shapes.ground.positions,
-				 transform: this.topBoxTransform
-			 }
-		  });
-		  this.shapes.ground.draw( graphics_state, this.baseBoxTransform, this.materials.tan);
-		  this.shapes.ground.draw( graphics_state, this.topBoxTransform, this.materials.tan);
-		  this.shapes.AABB.draw( graphics_state, this.demoTestAABB.getTransformMatrix(), this.materials.AABB);
+	  // GLADYS - draw justin's lamppost
+	  this.shapes.lamp.draw(graphics_state,Mat4.identity().times(Mat4.translation([0,4,0])),this.materials.gray);
+	  const lampTransforms = allWorldTransforms.lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const currTransform = lampTransforms[i];
+	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
 	  }
-	  */
+      //this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 
 	  // Check input and attempt to move spiderman for the next frame
 	  for (let dirString in this.movement_directions) {
