@@ -197,7 +197,7 @@ class CollisionManager {
 
   // gets the transform matrix of the boundary spiderman last hit. if none, returns null.
   // should be called after tryMoveSpiderman() to be useful
-  getBoundaryThatSpidermanJustHit(spidermanShape) {
+  getBoundaryThatSpidermanJustHit() {
     return this.hitTargetsTransform.boundary;
   }
 
