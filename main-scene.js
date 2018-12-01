@@ -89,7 +89,9 @@ class Assignment_Four_Scene extends Scene_Component
 		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
 		//JUSTIN - Allow object to jump
-		this.key_triggered_button( "Jump", [ "q" ], () => this.spiderman.jump() );
+		this.key_triggered_button( "Jump", [ "q" ], () => { this.spiderman.jump(); } );
+		//JUSTIN - Shoot Out Web
+		this.key_triggered_button( "Shoot Web", [ "x" ], () => {this.spiderman.change_web(); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.

@@ -102,11 +102,17 @@ class Spiderman
 	if (this.contact){
 	}
 	if (!this.webbed && !this.contact){
-		this.model_transform = this.physics.gravity(this.model_transform);
+		this.model_transform = this.physics.gravity();
 		this.physics.reset_angular();
 	}
-	if (this.webbed == true){
-		this.model_transform = this.physics.run_angular(this.model_transform);
+	if (this.webbed && !this.contact){
+		if (this.model_transform.times(Vec.of(0,0,0,1))[1] > 1){
+			this.model_transform = this.physics.pendulum(this.model_transform);
+			this.model_transform = this.physics.gravity();
+		}
+		else{
+			this.webbed = false; //forces web back and stop pendulum when at ground
+		}
 	} 
 		this.camera.translate(this.model_transform); 
   }
