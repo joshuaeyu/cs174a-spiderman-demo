@@ -137,6 +137,36 @@ class CollisionManager {
     return canMove;
   }
 
+  // returns true if the camera is within a building
+  isCameraWithinBuilding(cameraPos) {
+    //const cameraPos = cameraTransform.times(Vec.of(0,0,0,1));
+    //console.log("Camera pos: "+cameraPos);
+    const buildingAABBs = this.AABBs.buildings;
+    for (let i=0; i<buildingAABBs.length; i++) {
+      const buildingAABB = buildingAABBs[i];
+      if (buildingAABB.minX <= cameraPos[0] && buildingAABB.maxX >= cameraPos[0]
+          && buildingAABB.minY <= cameraPos[1] && buildingAABB.maxY >= cameraPos[1]
+          && buildingAABB.minZ <= cameraPos[2] && buildingAABB.maxZ >= cameraPos[2]) {
+          return true;
+      }
+    }
+    return false;
+  }
+
+  // returns the transform matrix of the building spiderman is hitting. if none, returns null
+  findBuildingThatSpidermanHits(spidermanShape) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+    let buildingTransform = null;
+    const buildingAABBs = this.AABBs.buildings;
+    for (let i=0; i<buildingAABBs.length; i++) {
+      const buildingAABB = buildingAABBs[i];
+      if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABB)) {
+          buildingTransform = buildingAABB.baseMatrix;
+      }
+    }
+    return buildingTransform;
+  }
+
   tryMovePerson(personShape) {
     //todo
   }

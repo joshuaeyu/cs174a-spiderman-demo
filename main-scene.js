@@ -221,7 +221,7 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // ============= end of static world generation
 
-
+	  // Josh todo: save this.collisionManager instance in Spiderman somehow. Maybe a setter for spiderman?
     }
     make_control_panel()
     { // Takes user input for button presses
@@ -300,15 +300,15 @@ class Assignment_Four_Scene extends Scene_Component
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
 
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
-
+	  
 	  // GLADYS - draw justin's lamppost
 	  this.shapes.lamp.draw(graphics_state,Mat4.identity().times(Mat4.translation([0,4,0])),this.materials.gray);
 	  const lampTransforms = allWorldTransforms.lampposts;
 	  for (let i=0; i<lampTransforms.length; i++) {
 	  	const currTransform = lampTransforms[i];
 	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
+	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 	  }
-      //this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 
 	  // Check input and attempt to move spiderman for the next frame
 	  for (let dirString in this.movement_directions) {
@@ -320,6 +320,15 @@ class Assignment_Four_Scene extends Scene_Component
 
 			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape)) {
 				this.spiderman.keyboard_move(dirString);
+			}
+			else {
+				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
+				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
+				if (buildingTransform != null) {
+					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
+				}
+				//JOSH demo #2: how to use the function to check if camera is within a building
+				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
 			}
 		 }
 	  }
