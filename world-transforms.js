@@ -46,10 +46,12 @@ class WorldTransforms {
     const numCellsBetweenLamps = 4;
     const lampOffset = 10;
 
+    // people/car generation parameters
+    const numCellsBetweenPeople = 1; //car uses same one
+
     // world's grid code. Add your objects here, within a cell or something!
     let numBuildings = 0;
-    let lampCellCounter = 0;
-    let numPeople = 0, numCars = 0;
+    //let lampCellCounter = 0;
     for (let x=gridLength/-2; x<=gridLength/2; x+=cellLength) {
       for (let y=gridLength/-2; y<=gridLength/2; y+=cellLength) {
         // generate and save building transforms
@@ -60,7 +62,14 @@ class WorldTransforms {
           this.transforms.buildings.push(buildingTransform);
           numBuildings++;
         }
-        //todo: adding PPL, etc
+      }
+    }
+    console.log('Generated '+numBuildings+' buildings');
+
+    // draw cars, people
+    let numPeople = 0, numCars = 0;
+    for (let x=gridLength/-2; x<=gridLength/2; x+=cellLength*numCellsBetweenPeople) {
+      for (let y=gridLength/-2; y<=gridLength/2; y+=cellLength*numCellsBetweenPeople) {
         this.transforms.cars.push(Mat4.translation([x,0,y]));
         numCars++;
 
@@ -68,7 +77,6 @@ class WorldTransforms {
         numPeople++;
       }
     }
-    console.log('Generated '+numBuildings+' buildings');
 
     // draw lamps
     for (let x=gridLength/-2; x<gridLength/2; x+=cellLength*numCellsBetweenLamps) {
