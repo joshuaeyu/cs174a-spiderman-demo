@@ -48,7 +48,7 @@ class CollisionManager {
       -web: TODO since depends on web being line or not
 
   */
-  constructor(boundaries, buildings, lampposts, spiderman, spidermanMainSubshapeName, people, peopleMainSubshapeName, cars, carsMainSubshapeName, web) {
+  constructor(boundaries, buildings, lampposts, spiderman, spidermanMainSubshapeName, people, peopleMainSubshapeName, cars, carsMainSubshapeName, web, coins) {
     // Set up "cache" for extracting exactly what spiderman hits
     this.hitTargetsTransform = {
       boundary: null,
@@ -96,6 +96,9 @@ class CollisionManager {
     this.regenerateCarsAABBs(cars);
 
     //web: todo
+
+    //coins
+    this.regenerateCoinsAABBs(coins);
   }
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
@@ -119,6 +122,17 @@ class CollisionManager {
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
       this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, carMainSubshapeName));
+    }
+  }
+
+  // regenerates all coins' AABBs from scratch.
+  regenerateCoinsAABBs(coinsShapes) {
+    this.AABBs.coins = [];
+    for (let i=0; i<coinsShapes.length; i++) {
+      const currShape = coinsShapes[i];
+      const points = currShape.positions;
+      const transform = currShape.transform;
+      this.AABBs.coins.push(AABB.generateAABBFromPoints(points, transform));
     }
   }
 
@@ -180,6 +194,13 @@ class CollisionManager {
     const peopleAABBs = this.AABBs.people;
     for (let i=0; i<peopleAABBs.length; i++) {
         if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+            canMove = false;
+        }
+    }
+
+    const coinsAABBs = this.AABBs.coins;
+    for (let i=0; i<coinsAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, coinsAABBs[i])) {
             canMove = false;
         }
     }

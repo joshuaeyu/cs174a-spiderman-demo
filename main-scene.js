@@ -145,6 +145,17 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
 	  }
 
+	  // coins
+  	  let coinShapes = [];
+	  const coinTransforms = this.worldTransforms.getTransforms().coins;
+	  for (let i=0; i<coinTransforms.length; i++) {
+	  	  const coinTransform = coinTransforms[i];
+		  coinShapes.push({
+		  	positions: this.shapes.coin.positions,
+		  	transform: coinTransform
+		  });
+	  };
+
 	  // TODO: lampposts, cars, people
 	  /*
 		note to daniel & justin about how to prepare collisionmanager for your game object. This wont do anything now,
@@ -183,7 +194,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", [], "body?", null);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", [], "body?", null, coinShapes);
 
 	  // ============= end of static world generation
 
@@ -235,6 +246,21 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.shapes.building.draw( graphics_state, transform, material );
 	  	//this.shapes.AABB.draw( graphics_state, transform, this.materials.AABB); //Uncomment to see building AABBs in red
 	  }
+
+	  // draw all coins
+	  const coinTransforms = allWorldTransforms.coins;
+	  for (let i=0; i<coinTransforms.length; i++) {
+	  	const transform = coinTransforms[i]
+	  		.times(Mat4.scale([0.8,1,1]))
+			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
+			.times(Mat4.translation([0,Math.cos(t)/4,0]));
+	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
+	  }
+ 	 // For debugging: draw coins' AABBs
+	 const coinsAABBs = this.collisionManager.AABBs.coins;
+	 for (let i=0; i<coinsAABBs.length; i++) {
+	 	this.shapes.AABB.draw( graphics_state, coinsAABBs[i].getTransformMatrix(), this.materials.AABB);
+	 }
 	  
      // Draw all people
      var peopleArray = [];
@@ -302,16 +328,6 @@ class Assignment_Four_Scene extends Scene_Component
 	  	const currTransform = lampTransforms[i];
 	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
 	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
-	  }
-
-	  //GLADYS: drawing coins
-	  const coinTransforms = allWorldTransforms.coins;
-	  for (let i=0; i<coinTransforms.length; i++) {
-	  	const transform = coinTransforms[i]
-	  		.times(Mat4.scale([0.8,1,1]))
-			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
-			.times(Mat4.translation([0,Math.cos(t)/4,0]));
-	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
 	  }
 
 	  // JOSH - Use model transform stored in Spiderman object.
