@@ -117,7 +117,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
 	  };
 
-	  // DANIEL - Cars and People
+	  // DANIEL - People
 	  this.people = [];
 	  const peopleTransforms = this.worldTransforms.getTransforms().people;
 	  for (let i=3; i<peopleTransforms.length; i+=14) {
@@ -139,11 +139,24 @@ class Assignment_Four_Scene extends Scene_Component
 	 		}
 	  }
 
+	  // cars
 	  this.cars = [];
 	  const carTransforms = this.worldTransforms.getTransforms().cars;
 	  for (let i=0; i<carTransforms.length; i+=5) {
 	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
 	  }
+	 var carArray = [];
+	 for (let i=0; i<this.cars.length; i++)
+	 {
+		var position_array = [], node_array = [];
+		this.cars[i].get_array(position_array, node_array);
+		for(let j=0; j<position_array.length; j++)
+		{
+			carArray.push(
+			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
+		}
+	 }	 
 
 	  // coins
   	  let coinShapes = [];
@@ -194,7 +207,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", [], "body?", null, coinShapes);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", carArray, "car", null, coinShapes); 
 
 	  // ============= end of static world generation
 
@@ -298,23 +311,9 @@ class Assignment_Four_Scene extends Scene_Component
 			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
 		}
-		// Can add a boolean here to determine if cars will move or not
+		//Try to move this car
 		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
 	 }	 
-	 
-	  // Limit # of AABB updates
-	  var count = 0;
-	  if (count == 0)	
-	  {
-		this.collisionManager.regenerateCarsAABBs(carArray);
-		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
-	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
-	 	 count++;
-	  }
-	  else if (count == 10)
-	  	count = 0;
-	  else
-	  	count++;
 
 	 // For debugging: draw peoples' AABBs
 	 const peopleAABBs = this.collisionManager.AABBs.people;
@@ -344,7 +343,25 @@ class Assignment_Four_Scene extends Scene_Component
 	  //JUSTIN - turn gravity on
 	  //this.spiderman.get_position();
 
+	  // Update AABB of all dynamic objects (except coins since AABB doesn't need to change much for it)
+
+	  this.collisionManager.regenerateSpidermanAABB({ body: { positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix } }, "body");
+	  // Limit # of AABB updates
+	  var count = 0;
+	  if (count == 0)	
+	  {
+		this.collisionManager.regenerateCarsAABBs(carArray);
+		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
+	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
+	 	 count++;
+	  }
+	  else if (count == 10)
+	  	count = 0;
+	  else
+	  	count++;
+
 	  // Check input and move Spiderman for the next frame
+	  
 	  for (let dirString in this.movement_directions) {
 		  if (this.movement_directions[dirString]) {
 		  	const nextTransform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));

@@ -87,7 +87,7 @@ class CollisionManager {
     }
 
     //spiderman
-    //this.regenerateSpidermanAABB(spiderman);
+    this.regenerateSpidermanAABB(spiderman);
 
     //people
     this.regeneratePeopleAABBs(people, peopleMainSubshapeName);
@@ -141,6 +141,31 @@ class CollisionManager {
     const peopleAABBs = this.AABBs.people;
     for (let i=0; i<peopleAABBs.length; i++) {
       peopleAABBs[i].updateAABBWithTranslationMatrix(transform);
+    }
+  }
+
+  // returns true if car won't collide with spiderman, other cars, or a person.
+  // doesnt check anything else since it def won't collide with them
+  tryMoveCar(carShape) {
+    const newCarAABB = AABB.generateAABBFromShapes(carShape);
+
+    const carsAABBs = this.AABBs.cars;
+    for (let i=0; i<carsAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+            return false;
+        }
+    }
+
+    const peopleAABBs = this.AABBs.people;
+    for (let i=0; i<peopleAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+            return false;
+        }
+    }
+
+    const spidermanAABB = this.AABBs.spiderman;
+    if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+        return false;
     }
   }
 
