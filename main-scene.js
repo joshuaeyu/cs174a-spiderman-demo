@@ -284,6 +284,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  else
 	  	count++;
 
+	 // For debugging: draw peoples' AABBs
 	 const peopleAABBs = this.collisionManager.AABBs.people;
 	 for (let i=0; i<peopleAABBs.length; i++) {
 	 	this.shapes.AABB.draw( graphics_state, peopleAABBs[i].getTransformMatrix(), this.materials.AABB);
