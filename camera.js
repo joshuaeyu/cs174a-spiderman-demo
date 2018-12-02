@@ -21,12 +21,12 @@ class Camera
                                       camera_PosVec:         Vec.of(0,0,0)            /* Camera's absolute position vector */ } } );
     // Constant default Spiderman-to-camera ("S-to-C") vector (looks forward)
     Object.defineProperty( this, 'defaultSToC', { value: Vec.of(0,3,15),  writable: false } );
+    Object.defineProperty( this, 'inBirdsEye', { value: false,  writable: true } );
     // Assign real initial values and push to gs
     this.locals.spiderman_PosVec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
     this.locals.spidermanToCamera_Vec = this.defaultSToC;
     this.locals.camera_PosVec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3().plus( this.locals.spidermanToCamera_Vec );
-    this.update_transform();
-    this.push_to_gs();
+    this.update_and_push();
   }
   swivel( mouseEvent )
   {
@@ -60,15 +60,8 @@ class Camera
                                                                                                 xz_radius_min/xz_radius_proposed ) );
     }
 
-    // Determine camera position and camera transform, then push to gs
-    let camera_Pos_proposed = this.locals.spiderman_Mat.times( Mat4.translation(this.locals.spidermanToCamera_Vec) )
-                                                      .times( Vec.of(0,0,0,1) ).to3();
-    let y_mult = 1;
-    if ( camera_Pos_proposed.dot( Vec.of(0,1,0) ) < 0 ) // If the camera is below the ground, force camera's y-coordinate to 0.
-      y_mult = 0;
-    this.locals.camera_PosVec = camera_Pos_proposed.mult_pairs( Vec.of(1,y_mult,1) );
-    this.update_transform();
-    this.push_to_gs();
+    this.update_and_push();
+    this.inBirdsEye = false;
   }
   translate( spidermanUnscaledPosMat )
   {
@@ -76,12 +69,8 @@ class Camera
     this.locals.spiderman_Mat = spidermanUnscaledPosMat;
     this.locals.spiderman_PosVec = spidermanUnscaledPosMat.times(Vec.of(0,0,0,1)).to3();
 
-    // Use existing S-to-C to determine camera position and camera transform, then push to gs
-    let y_mult = this.locals.spidermanToCamera_Vec.dot(Vec.of(0,-1,0)) > 0 ? 0 : 1; // If the camera is below the ground, force camera's y-coordinate to 0.
-    this.locals.camera_PosVec = this.locals.spiderman_Mat.times( Mat4.translation(this.locals.spidermanToCamera_Vec) )
-                                                         .times( Vec.of(0,0,0,1) ).to3().mult_pairs( Vec.of(1,y_mult,1) );
-    this.update_transform();
-    this.push_to_gs();
+    this.update_and_push();
+    this.inBirdsEye = false;
   }
   rotate_subject( theta )
   {
@@ -96,25 +85,29 @@ class Camera
   {
     // Revert S-to-C vector back to default
     this.locals.spidermanToCamera_Vec = this.defaultSToC;
-    // Update camera position and camera transform according, then push to gs
-    this.locals.camera_PosVec = this.locals.spiderman_Mat.times( Mat4.translation(this.locals.spidermanToCamera_Vec) )
-                                                         .times( Vec.of(0,0,0,1) ).to3();
-    this.update_transform();
-    this.push_to_gs();
+
+    this.update_and_push();
+    this.inBirdsEye = false;
   }
   toggle_birdseye()
   {
     // Bird's-eye view is when the camera is positioned 125 units above the origin looking straight down
-    this.globals.gs.camera_transform = this.globals.gs.camera_transform === this.locals.camera_Mat ?
-        Mat4.look_at( Vec.of(0,125,0), Vec.of(0,0,0), Vec.of(0,0,-1) ) : this.locals.camera_Mat;
+    this.globals.gs.camera_transform = !this.inBirdsEye ?
+        Mat4.look_at( Vec.of(0,200,0), Vec.of(0,0,0), Vec.of(0,0,-1) ) : this.locals.camera_Mat;
+    this.inBirdsEye = !this.inBirdsEye;
   }
-  update_transform()
+
+  update_and_push()
   {
+    // Determine camera position and camera transform, then push to gs
+    let camera_Pos_proposed = this.locals.spiderman_Mat.times( Mat4.translation(this.locals.spidermanToCamera_Vec) )
+                                                       .times( Vec.of(0,0,0,1) ).to3();
+    let y_mult = camera_Pos_proposed[1] < 0 ? 0 : 1; // If the camera is below the ground, force camera's y-coordinate to 0.
+    this.locals.camera_PosVec = camera_Pos_proposed.mult_pairs( Vec.of(1,y_mult,1) );
+
     // Update local camera transform according to local camera position and local Spiderman position
     this.locals.camera_Mat = Mat4.look_at( this.locals.camera_PosVec, this.locals.spiderman_PosVec, Vec.of(0,1,0) );
-  }
-  push_to_gs()
-  {
+    
     // Update global (graphics_state) camera transform according to local camera transform
     this.globals.gs.camera_transform = this.locals.camera_Mat;
   }

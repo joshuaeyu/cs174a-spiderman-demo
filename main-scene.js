@@ -46,11 +46,41 @@ class Assignment_Four_Scene extends Scene_Component
       	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) )
       }
 
+<<<<<<< Updated upstream
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
      
+||||||| merged common ancestors
+		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+=======
+<<<<<<< Updated upstream
+		this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+>>>>>>> Stashed changes
 
+||||||| merged common ancestors
+	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+     
+<<<<<<< Updated upstream
+
+=======
+	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+     
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+||||||| merged common ancestors
+
+=======
+>>>>>>> Stashed changes
+||||||| merged common ancestors
+
+=======
+>>>>>>> Stashed changes
 	  // JOSH - Spiderman object
 	  this.spiderman = new Spiderman( context.globals.graphics_state );
+
+	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
+	  const spidermanShape = {
+	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
+	  };
 
 	  // JOSH - Pointer capture and mouse tracking
 	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
@@ -60,6 +90,7 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // JOSH - Implement Minsoo's smooth motion
 	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
+<<<<<<< Updated upstream
 
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
@@ -186,6 +217,236 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ============= end of static world generation
 
 	  // Josh todo: save this.collisionManager instance in Spiderman somehow. Maybe a setter for spiderman?
+||||||| merged common ancestors
+=======
+<<<<<<< Updated upstream
+||||||| merged common ancestors
+
+	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
+
+	  // generate world with inputted size
+	  this.worldTransforms = new WorldTransforms(150,100,100,16);
+
+	  // now format all world objects for collision manager.
+
+	  // boundaries (NSEW, ground, ceiling)
+	  const boundaryTransforms = this.worldTransforms.getTransforms().boundaries;
+	  let boundaryShapes = {};
+	  for (let boundaryTransformStr in boundaryTransforms) {
+	  	const boundaryTransform = boundaryTransforms[boundaryTransformStr];
+	  	boundaryShapes[boundaryTransformStr] = {
+	  		positions: this.shapes.wall.positions,
+	  		transform: boundaryTransform
+	  	};
+	  }
+
+	  // buildings
+	  let buildingShapes = [];
+	  const buildingTransforms = this.worldTransforms.getTransforms().buildings;
+	  for (let i=0; i<buildingTransforms.length; i++) {
+	  	  const buildingTransform = buildingTransforms[i];
+		  buildingShapes.push({
+		  	positions: this.shapes.building.positions,
+		  	transform: buildingTransform
+		  });
+	  }
+	  // while you're at it, generate building objects with random textures
+	  this.buildings = [];
+	  for (let i=0; i<buildingTransforms.length; i++) {
+	  	  const buildingTransform = buildingTransforms[i];
+		  const buildingMat = this.materials.buildings[Math.floor(Math.random()*this.materials.buildings.length)];
+      	  this.buildings.push(new Building(buildingMat, buildingTransform));
+	  }
+
+	  //lampposts
+	  let lampShapes = [];
+	  const lampTransforms = this.worldTransforms.getTransforms().lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const lampTransform = lampTransforms[i];
+		lampShapes.push({
+			lamppost: {
+				positions: this.shapes.lamp.positions,
+				transform: lampTransform
+			}
+		})
+	  }
+
+<<<<<<< Updated upstream
+	  // DANIEL - Cars and People
+	  this.people = [];
+	  const peopleTransforms = this.worldTransforms.getTransforms().people;
+	  for (let i=3; i<peopleTransforms.length; i+=14) {
+	  	this.people.push(new Person(peopleTransforms[i], this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
+	  }
+
+	  this.cars = [];
+	  const carTransforms = this.worldTransforms.getTransforms().cars;
+	  for (let i=0; i<carTransforms.length; i+=5) {
+	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
+	  }
+
+	  // TODO: lampposts, cars, people
+	  /*
+		note to daniel & justin about how to prepare collisionmanager for your game object. This wont do anything now,
+		but collisionmanager will eventually use this info to detect any collisions b/w your game object and something else.
+
+		1) for each game object, prepare a "shapes" Javascript object. e.g. for a person, its shapes object would look like
+			  {
+                //1st person
+                torso: { positions: [], transform: Mat4 }, 
+                head: { positions: [], transform: Mat4 },
+                ...
+              }
+          where the {} brackets make it a JS object whose properties are set to "torso" and "head" to represent
+          subshapes of the person. Each subshape must have 2 properties. 
+          	1. 1st property is "positions", which is the array returned by this.shapes.[person drawable].positions, 
+          	where [person drawable] is the shape you use in main-scene to draw the person. 
+          	2. 2nd property is "transform", which is the transform matrix of that subshape. Note that this must be
+          	a global matrix, i.e. the matrix you'll ultimately call draw on. No local matrices!!
+       2) compile the game objects into an array. e.g. for people, the array would look like
+		  [ 	
+		  	  {
+				//1st person
+				torso: { positions: [], transform: Mat4 }, 
+				head: { positions: [], transform: Mat4 },
+				...
+			  },
+			  { 
+				//2nd
+				torso: { positions: [], transform: Mat4 }, 
+				head: { positions: [], transform: Mat4 } 
+				...
+			  },
+			  ...
+		]
+	  3) pass this array as the appropriate parameter into CollisionManager's constructor below. Check collision-manager
+	  for the details.
+	  */
+	  
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, [], [], null);
+	  this.spiderman.setCollisionManager( this.collisionManager );
+
+	  // ============= end of static world generation
+
+	  // Josh todo: save this.collisionManager instance in Spiderman somehow. Maybe a setter for spiderman?
+=======
+
+	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
+
+	  // generate world with inputted size
+	  this.worldTransforms = new WorldTransforms(150,100,100,16);
+
+	  // now format all world objects for collision manager.
+
+	  // boundaries (NSEW, ground, ceiling)
+	  const boundaryTransforms = this.worldTransforms.getTransforms().boundaries;
+	  let boundaryShapes = {};
+	  for (let boundaryTransformStr in boundaryTransforms) {
+	  	const boundaryTransform = boundaryTransforms[boundaryTransformStr];
+	  	boundaryShapes[boundaryTransformStr] = {
+	  		positions: this.shapes.wall.positions,
+	  		transform: boundaryTransform
+	  	};
+	  }
+
+	  // buildings
+	  let buildingShapes = [];
+	  const buildingTransforms = this.worldTransforms.getTransforms().buildings;
+	  for (let i=0; i<buildingTransforms.length; i++) {
+	  	  const buildingTransform = buildingTransforms[i];
+		  buildingShapes.push({
+		  	positions: this.shapes.building.positions,
+		  	transform: buildingTransform
+		  });
+	  }
+	  // while you're at it, generate building objects with random textures
+	  this.buildings = [];
+	  for (let i=0; i<buildingTransforms.length; i++) {
+	  	  const buildingTransform = buildingTransforms[i];
+		  const buildingMat = this.materials.buildings[Math.floor(Math.random()*this.materials.buildings.length)];
+      	  this.buildings.push(new Building(buildingMat, buildingTransform));
+	  }
+
+	  //lampposts
+	  let lampShapes = [];
+	  const lampTransforms = this.worldTransforms.getTransforms().lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const lampTransform = lampTransforms[i];
+		lampShapes.push({
+			lamppost: {
+				positions: this.shapes.lamp.positions,
+				transform: lampTransform
+			}
+		})
+	  }
+
+||||||| merged common ancestors
+	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
+	  const spidermanShape = {
+	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
+	  };
+
+=======
+>>>>>>> Stashed changes
+	  // DANIEL - Cars and People
+	  this.people = [];
+	  const peopleTransforms = this.worldTransforms.getTransforms().people;
+	  for (let i=3; i<peopleTransforms.length; i+=14) {
+	  	this.people.push(new Person(peopleTransforms[i], this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
+	  }
+
+	  this.cars = [];
+	  const carTransforms = this.worldTransforms.getTransforms().cars;
+	  for (let i=0; i<carTransforms.length; i+=5) {
+	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
+	  }
+
+	  // TODO: lampposts, cars, people
+	  /*
+		note to daniel & justin about how to prepare collisionmanager for your game object. This wont do anything now,
+		but collisionmanager will eventually use this info to detect any collisions b/w your game object and something else.
+
+		1) for each game object, prepare a "shapes" Javascript object. e.g. for a person, its shapes object would look like
+			  {
+                //1st person
+                torso: { positions: [], transform: Mat4 }, 
+                head: { positions: [], transform: Mat4 },
+                ...
+              }
+          where the {} brackets make it a JS object whose properties are set to "torso" and "head" to represent
+          subshapes of the person. Each subshape must have 2 properties. 
+          	1. 1st property is "positions", which is the array returned by this.shapes.[person drawable].positions, 
+          	where [person drawable] is the shape you use in main-scene to draw the person. 
+          	2. 2nd property is "transform", which is the transform matrix of that subshape. Note that this must be
+          	a global matrix, i.e. the matrix you'll ultimately call draw on. No local matrices!!
+       2) compile the game objects into an array. e.g. for people, the array would look like
+		  [ 	
+		  	  {
+				//1st person
+				torso: { positions: [], transform: Mat4 }, 
+				head: { positions: [], transform: Mat4 },
+				...
+			  },
+			  { 
+				//2nd
+				torso: { positions: [], transform: Mat4 }, 
+				head: { positions: [], transform: Mat4 } 
+				...
+			  },
+			  ...
+		]
+	  3) pass this array as the appropriate parameter into CollisionManager's constructor below. Check collision-manager
+	  for the details.
+	  */
+	  
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, [], [], null);
+	  this.spiderman.setCollisionManager( this.collisionManager );
+
+	  // ============= end of static world generation
+
+	  // Josh todo: save this.collisionManager instance in Spiderman somehow. Maybe a setter for spiderman?
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     }
     make_control_panel()
     { // Takes user input for button presses
@@ -303,9 +564,18 @@ class Assignment_Four_Scene extends Scene_Component
 	  }
 
 	  // JOSH - Use model transform stored in Spiderman object.
+<<<<<<< Updated upstream
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+||||||| merged common ancestors
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
+=======
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.75,1,.5]));
+>>>>>>> Stashed changes
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
 
+<<<<<<< Updated upstream
 	  this.spiderman.update();
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
@@ -353,3 +623,248 @@ class Assignment_Four_Scene extends Scene_Component
 	  }
   }
 }
+||||||| merged common ancestors
+	  // Check input and move Spiderman each frame
+	  if (this.movement_directions.forward)
+	  	this.spiderman.keyboard_move("forward");
+	  if (this.movement_directions.backward)
+	  	this.spiderman.keyboard_move("backward");
+	  if (this.movement_directions.left)
+	  	this.spiderman.keyboard_move("left");
+	  if (this.movement_directions.right)
+	  	this.spiderman.keyboard_move("right");
+
+	  //draw stuff
+	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
+	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,-1,0])), this.materials.tan);
+
+	  //create AABBs
+	  const buildingAABB = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingPosMatrix);
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix.times(Mat4.translation([0,-1,0])));
+
+	  //potentially change AABB color to red if AABBs intersect
+	  this.materials.AABB.color = AABB.doAABBsIntersect(buildingAABB, spidermanAABB)? Color.of(1,0,0,0.5) : Color.of(0,0,0,0);
+
+	  //draw AABBs
+	  this.shapes.AABB.draw( graphics_state, buildingAABB.getTransformMatrix(), this.materials.AABB );
+	  this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
+    }
+}
+
+class Texture_Scroll_X extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
+}
+
+class Texture_Rotate extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
+}
+=======
+	  // Check input and move Spiderman each frame
+	  if (this.movement_directions.forward)
+	  	this.spiderman.keyboard_move("forward");
+	  if (this.movement_directions.backward)
+	  	this.spiderman.keyboard_move("backward");
+	  if (this.movement_directions.left)
+	  	this.spiderman.keyboard_move("left");
+	  if (this.movement_directions.right)
+	  	this.spiderman.keyboard_move("right");
+
+	  //draw stuff
+	  const buildingPosMatrix = Mat4.identity().times(Mat4.translation(Vec.of(10,0,0))).times(Mat4.scale([3,10,3]));
+	  this.shapes.building.draw( graphics_state, buildingPosMatrix, this.materials.tan);
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,-1,0])), this.materials.tan);
+
+	  //create AABBs
+	  const buildingAABB = AABB.generateAABBFromPoints(this.shapes.building.positions, buildingPosMatrix);
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix.times(Mat4.translation([0,-1,0])));
+
+	  //potentially change AABB color to red if AABBs intersect
+	  this.materials.AABB.color = AABB.doAABBsIntersect(buildingAABB, spidermanAABB)? Color.of(1,0,0,0.5) : Color.of(0,0,0,0);
+
+	  //draw AABBs
+	  this.shapes.AABB.draw( graphics_state, buildingAABB.getTransformMatrix(), this.materials.AABB );
+	  this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
+    }
+||||||| merged common ancestors
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+||||||| merged common ancestors
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
+
+=======
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+>>>>>>> Stashed changes
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
+	  
+	  // GLADYS - draw justin's lamppost
+	  const lampTransforms = allWorldTransforms.lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const currTransform = lampTransforms[i];
+	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
+	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
+	  }
+
+	  // Check input and attempt to move spiderman for the next frame
+	  for (let dirString in this.movement_directions) {
+		  if (this.movement_directions[dirString]) {
+		  	const nextTransform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));
+			const nextSpidermanShape = {
+				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
+			};
+<<<<<<< Updated upstream
+			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
+					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
+					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
+				this.spiderman.setNextShape(nextSpidermanShape);
+				this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
+			}
+			else {
+				//if hit boundary, highlight it
+				const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
+				if (boundaryTransform != null) {
+					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
+				}
+				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
+				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
+				if (buildingTransform != null) {
+					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
+				}
+				//JOSH demo #2: how to use the function to check if camera is within a building
+				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
+			}
+		 }
+	  }
+  }
+=======
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
+	  
+	  // GLADYS - draw justin's lamppost
+	  const lampTransforms = allWorldTransforms.lampposts;
+	  for (let i=0; i<lampTransforms.length; i++) {
+	  	const currTransform = lampTransforms[i];
+	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
+	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
+	  }
+
+	  // Check input and attempt to move spiderman for the next frame
+	  for (let dirString in this.movement_directions) {
+		  if (this.movement_directions[dirString]) {
+		  	const nextTransform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));
+			const nextSpidermanShape = {
+				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
+			};
+			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
+					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
+					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
+				this.spiderman.setNextShape(nextSpidermanShape);
+				this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
+||||||| merged common ancestors
+
+			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape)) {
+				this.spiderman.keyboard_move(dirString);
+=======
+			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
+					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
+					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
+				this.spiderman.setNextShape(nextSpidermanShape);
+				this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
+>>>>>>> Stashed changes
+			}
+			else {
+				//if hit boundary, highlight it
+				const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
+				if (boundaryTransform != null) {
+					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
+				}
+				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
+				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
+				if (buildingTransform != null) {
+					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
+				}
+				//JOSH demo #2: how to use the function to check if camera is within a building
+				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
+			}
+		 }
+	  }
+  }
+>>>>>>> Stashed changes
+}
+
+class Texture_Scroll_X extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
+}
+
+class Texture_Rotate extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
+}
+>>>>>>> Stashed changes
