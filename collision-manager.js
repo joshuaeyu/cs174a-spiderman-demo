@@ -145,7 +145,7 @@ class CollisionManager {
     const boundaryAABBs = this.AABBs.boundaries;
     for (let dirString in boundaryAABBs) {
       const currAABB = boundaryAABBs[dirString];
-      if (AABB.doAABBsIntersect(newSpidermanAABB, currAABB)) {
+      if (!AABB.doAABBsNotIntersect(newSpidermanAABB, currAABB)) {
           canMove = false;
           this.hitTargetsTransform.boundary = currAABB.baseMatrix;
           break;
@@ -154,7 +154,7 @@ class CollisionManager {
 
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {
-        if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABBs[i])) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, buildingAABBs[i])) {
             canMove = false;
             this.hitTargetsTransform.building = buildingAABBs[i].baseMatrix;
             break;
@@ -163,7 +163,7 @@ class CollisionManager {
 
     const lamppostAABBs = this.AABBs.lampposts;
     for (let i=0; i<lamppostAABBs.length; i++) {
-        if (AABB.doAABBsIntersect(newSpidermanAABB, lamppostAABBs[i])) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, lamppostAABBs[i])) {
             canMove = false;
             this.hitTargetsTransform.lamppost = lamppostAABBs[i].baseMatrix;
             break;
@@ -172,14 +172,14 @@ class CollisionManager {
 
     const carsAABBs = this.AABBs.cars;
     for (let i=0; i<carsAABBs.length; i++) {
-        if (AABB.doAABBsIntersect(newSpidermanAABB, carsAABBs[i])) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
             canMove = false;
         }
     }
 
     const peopleAABBs = this.AABBs.people;
     for (let i=0; i<peopleAABBs.length; i++) {
-        if (AABB.doAABBsIntersect(newSpidermanAABB, peopleAABBs[i])) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
             canMove = false;
         }
     }
@@ -210,7 +210,7 @@ class CollisionManager {
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {
       const buildingAABB = buildingAABBs[i];
-      if (AABB.doAABBsIntersect(newSpidermanAABB, buildingAABB)) {
+      if (!AABB.doAABBsNotIntersect(newSpidermanAABB, buildingAABB)) {
           buildingTransform = buildingAABB.baseMatrix;
           break;
       }

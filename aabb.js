@@ -124,11 +124,20 @@ class AABB {
   }
 
 
+  /*
   // Returns true if the given AABB's intersect.
   static doAABBsIntersect(a, b) {
     return (a.minX <= b.maxX && a.maxX >= b.minX) &&
            (a.minY <= b.maxY && a.maxY >= b.minY) &&
            (a.minZ <= b.maxZ && a.maxZ >= b.minZ);
+  }
+  */
+
+  // Returns true if the given AABB's DO NOT intersect. Likely faster computation than doAABBsIntersect
+  static doAABBsNotIntersect(a, b) {
+    return a.minX > b.maxX || a.maxX < b.minX
+      || a.minY > b.maxY || a.maxY < b.minY
+      || a.minZ > b.maxZ || a.maxZ < b.minZ;
   }
 }
 
