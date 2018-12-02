@@ -133,7 +133,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 	  
 	  //JUSTIN - turn gravity on
-	  this.spiderman.get_position();
+	  //this.spiderman.get_position();
 	  // Check input and move Spiderman for the next frame
 	  const gapCollisionDetection = true; // if true, there will be gap between colliding objects
 	  for (let dirString in this.movement_directions) {

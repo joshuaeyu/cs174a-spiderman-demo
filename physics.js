@@ -55,7 +55,7 @@ class Physics
 	{
 		if (this.position.y < this.permanent_ground || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
-			this.velocity_y = 15.0;
+			this.velocity_y = 30.0;
 			this.grounded = false;
 		}
 	}
@@ -63,8 +63,10 @@ class Physics
 	pendulum(spidermanUnscaledPosMat)
 	{
 		var length = 1;
+		this.velocity_y = 0;
+		var previous_y = length * Math.sin(this.rotation);
 		this.rotation += this.ang_vel * (this.gs.animation_delta_time / 1000) + (0.5 * this.ang_acc * (this.gs.animation_delta_time / 1000) * (this.gs.animation_delta_time / 1000));
-		var moment_of_inertia = this.mass * length * length; //100.5 is just an arbitary number at this point sqrt(10^2 + 100^2)
+		var moment_of_inertia = this.mass * length * length; //length is just an arbitary number at this point sqrt
 		//calculate  net force on object
 		var torque = this.mass * -this.acc_grav * Math.cos(this.rotation) * length;
 		//calculate acceleration
@@ -73,8 +75,10 @@ class Physics
 		this.ang_vel += 0.5 * (ang_acc + this.ang_acc) * (this.gs.animation_delta_time / 1000);
 		this.ang_acc = ang_acc;
 		//calculate position
-		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,length * Math.sin(this.rotation), length * -Math.cos(this.rotation)]));
+		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,length * Math.sin(this.rotation) - previous_y, length * -Math.cos(this.rotation)]));
+		console.log( (length * Math.sin(this.rotation)) + " " + (length * -Math.cos(this.rotation)));
 		this.update_pos(this.spiderman_PosMat);
+		console.log (this.position.y + " " + this.position.x  );
 		//return position
 		return this.spiderman_PosMat;
 	}

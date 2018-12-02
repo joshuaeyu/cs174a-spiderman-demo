@@ -101,14 +101,13 @@ class Spiderman
   update(){
 	if (this.contact){
 	}
-	if (!this.webbed && !this.contact){
+	if (!this.webbed && !this.contact){ //if neither in contact or spider web out
 		this.model_transform = this.physics.gravity();
 		this.physics.reset_angular();
 	}
-	if (this.webbed && !this.contact){
+	if (this.webbed && !this.contact){ //if web is out and he is not in contact with anything
 		if (this.model_transform.times(Vec.of(0,0,0,1))[1] > 1){
 			this.model_transform = this.physics.pendulum(this.model_transform);
-			this.model_transform = this.physics.gravity();
 		}
 		else{
 			this.webbed = false; //forces web back and stop pendulum when at ground
