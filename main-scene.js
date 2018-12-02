@@ -225,17 +225,17 @@ class Assignment_Four_Scene extends Scene_Component
 	 		{
 	 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
 	 			peopleArray.push(
-	 			{	torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
+//	 			    torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 // 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
 //					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
- 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
- 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
+// 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
+// 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
 	 		}
 	 		// Can add a boolean here to determine if cars will move or not
 	 		this.people[i].move(Mat4.translation([0,0,Math.cos(t)*2]));
 	 	}
-	 this.collisionManager.regeneratePeopleAABBs(peopleArray);
-
+	 
      // Draw all cars
 	 var carArray = [];
 	 for (let i=0; i<this.cars.length; i++)
@@ -250,10 +250,16 @@ class Assignment_Four_Scene extends Scene_Component
  					hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
 	 		}
 	 		// Can add a boolean here to determine if cars will move or not
-	 		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*t)/5]), Mat4.rotation(Math.cos(2*t)/10,[0,0,1]));
-	 	}	 	
-	  this.collisionManager.regenerateCarsAABBs(carArray);
-
+	 		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
+	 	}	 
+	 
+	  var count = 0;
+	  if (count == 0)	
+	  	{this.collisionManager.regenerateCarsAABBs(carArray); this.collisionManager.regeneratePeopleAABBs(peopleArray); count++;}
+	  else if (count == 10)
+	  	count = 0;
+	  else
+	  	count++;
       
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));

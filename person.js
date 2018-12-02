@@ -18,6 +18,7 @@ class Person {
 	  this.left_upper_arm = new Node(Mat4.translation([-1,0.1,-1]).times(Mat4.rotation(1,[1,0,0]).times(Mat4.scale([0.25,1,0.4]))),cube, green);
 	  this.left_lower_arm = new Node(Mat4.translation([0,-0.6,-1]).times(Mat4.rotation(3,[1,0,0]).times(Mat4.scale([0.95,0.5,0.95]))), cube, tan);
 	  this.left_hand = new Node(Mat4.rotation(1,[1,0,0]).times(Mat4.translation([0,1,0.5]).times(Mat4.scale([1,1.5,0.75]))), sphere, white);
+	  //this.intersection_box = new Node(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3])), cube, black);
 
 	  this.torso.add_child(this.neck);
 	  this.neck.add_child(this.head);
@@ -34,13 +35,16 @@ class Person {
 	  this.left_upper_arm.add_child(this.left_lower_arm);
 	  this.right_lower_arm.add_child(this.right_hand);
 	  this.left_lower_arm.add_child(this.left_hand);
+	  //this.torso.add_child(this.intersection_box);
   }
 
   get_array(position_array, node_array) {
     this.torso.list_draw_compounded(position_array, Mat4.identity(), node_array);
   }
 
-  move(person_matrix) {
+  move(person_matrix,left_leg_matrix,right_leg_matrix) {
     this.torso.position = this.torso.position.times(person_matrix);
+    //this.left_upper_leg.position = this.left_upper_leg.position.times(left_leg_matrix);
+    //this.right_upper_leg.position = this.right_upper_leg.position.times(right_leg_matrix);
   }
 }

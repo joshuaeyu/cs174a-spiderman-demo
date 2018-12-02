@@ -17,6 +17,7 @@ class Car{
  	  this.right_light = new Node(Mat4.translation([0.5,0.2,-0.8]).times(Mat4.scale([0.25,0.25,0.25])), cube, yellow);
  	  this.left_back_light = new Node(Mat4.translation([-0.6,0,0.8]).times(Mat4.scale([0.3,0.25,0.25])), cube, red);
  	  this.right_back_light = new Node(Mat4.translation([0.6,0,0.8]).times(Mat4.scale([0.3,0.2,0.25])), cube, red);
+ 	  //this.intersection_box = new Node(Mat4.)
 
  	  this.car.add_child(this.hood);
  	  this.car.add_child(this.windows);
