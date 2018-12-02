@@ -139,7 +139,7 @@ class CollisionManager {
       lamppost: null,
       person: null,
       car: null
-    }
+    };
     let canMove = true;
 
     const boundaryAABBs = this.AABBs.boundaries;
@@ -222,6 +222,12 @@ class CollisionManager {
   // should be called after tryMoveSpiderman() to be useful
   getBoundaryThatSpidermanJustHit() {
     return this.hitTargetsTransform.boundary;
+  }
+
+  // gets the transform matrix of the building spiderman last hit. if none, returns null.
+  // should be called after tryMoveSpiderman() to be useful
+  getBuildingThatSpidermanJustHit() {
+    return this.hitTargetsTransform.building;
   }
 
   tryMovePerson(personShape) {
