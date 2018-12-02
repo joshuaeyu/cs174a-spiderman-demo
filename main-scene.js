@@ -19,7 +19,8 @@ class Assignment_Four_Scene extends Scene_Component
       		spiderman:  new Cube(),
       		AABB: 		new Cube(),
       		lamp: new Lamp(),
-      		ball: new Subdivision_Sphere(4)
+      		ball: new Subdivision_Sphere(4),
+      		coin:		new Capped_Cylinder(10,10),
       }
       this.submit_shapes( context, shapes );
 
@@ -43,7 +44,8 @@ class Assignment_Four_Scene extends Scene_Component
       	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/ground.png", true) }),
       	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", true) }),
       	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", true) }),
-      	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) )
+      	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) ),
+      	coin: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1 ), { ambient: 0.8, specular: 1 } )
       }
 
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
@@ -64,7 +66,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(75,50,50,8);
+	  this.worldTransforms = new WorldTransforms(75,50,50,8,10);
 
 	  // now format all world objects for collision manager.
 
@@ -300,6 +302,16 @@ class Assignment_Four_Scene extends Scene_Component
 	  	const currTransform = lampTransforms[i];
 	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
 	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
+	  }
+
+	  //GLADYS: drawing coins
+	  const coinTransforms = allWorldTransforms.coins;
+	  for (let i=0; i<coinTransforms.length; i++) {
+	  	const transform = coinTransforms[i]
+	  		.times(Mat4.scale([0.8,1,1]))
+			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
+			.times(Mat4.translation([0,Math.cos(t)/4,0]));
+	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
 	  }
 
 	  // JOSH - Use model transform stored in Spiderman object.
