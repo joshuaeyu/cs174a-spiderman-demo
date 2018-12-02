@@ -43,7 +43,7 @@ class WorldTransforms {
     const buildingMaxHeight = 25;
 
     // lamppost generation parameters
-    const numCellsBetweenLamps = 3;
+    const numCellsBetweenLamps = 4;
     const lampOffset = 10;
 
     // world's grid code. Add your objects here, within a cell or something!

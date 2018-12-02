@@ -64,7 +64,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(150,100,100,16);
+	  this.worldTransforms = new WorldTransforms(100,50,50,8);
 
 	  // now format all world objects for collision manager.
 
@@ -121,6 +121,21 @@ class Assignment_Four_Scene extends Scene_Component
 	  for (let i=3; i<peopleTransforms.length; i+=14) {
 	  	this.people.push(new Person(peopleTransforms[i], this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
 	  }
+      let peopleArray = []; // to initialize collision-manager
+      for (let i=0; i<this.people.length; i++)
+	  {
+	 		var position_array = [], node_array = [];
+	 		this.people[i].get_array(position_array, node_array);
+	 		for(let j=0; j<position_array.length; j++)
+	 		{
+	 			peopleArray.push(
+	 			{	torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+// 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
+//					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
+ 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
+ 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
+	 		}
+	  }
 
 	  this.cars = [];
 	  const carTransforms = this.worldTransforms.getTransforms().cars;
@@ -166,7 +181,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, [], [], null);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", [], "body?", null);
 
 	  // ============= end of static world generation
 
@@ -217,6 +232,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  
      // Draw all people
      var peopleArray = [];
+     const peopleTranslateMatrix = Mat4.translation([0,0,Math.cos(t)*2]);
      for (let i=0; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
@@ -232,35 +248,47 @@ class Assignment_Four_Scene extends Scene_Component
 // 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
 // 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
 	 		}
+	 		
 	 		// Can add a boolean here to determine if cars will move or not
-	 		this.people[i].move(Mat4.translation([0,0,Math.cos(t)*2]));
+	 		this.people[i].move(peopleTranslateMatrix);
 	 	}
-	 
+
      // Draw all cars
 	 var carArray = [];
 	 for (let i=0; i<this.cars.length; i++)
-	 	{
-	 		var position_array = [], node_array = [];
-	 		this.cars[i].get_array(position_array, node_array);
-	 		for(let j=0; j<position_array.length; j++)
-	 		{
-	 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
-	 			carArray.push(
-	 			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
- 					hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
-	 		}
-	 		// Can add a boolean here to determine if cars will move or not
-	 		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
-	 	}	 
+	 {
+		var position_array = [], node_array = [];
+		this.cars[i].get_array(position_array, node_array);
+		for(let j=0; j<position_array.length; j++)
+		{
+			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
+			carArray.push(
+			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
+		}
+		// Can add a boolean here to determine if cars will move or not
+		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
+	 }	 
 	 
+	  // Limit # of AABB updates
 	  var count = 0;
 	  if (count == 0)	
-	  	{this.collisionManager.regenerateCarsAABBs(carArray); this.collisionManager.regeneratePeopleAABBs(peopleArray); count++;}
+	  {
+		this.collisionManager.regenerateCarsAABBs(carArray);
+		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
+	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
+	 	 count++;
+	  }
 	  else if (count == 10)
 	  	count = 0;
 	  else
 	  	count++;
-      
+
+	 const peopleAABBs = this.collisionManager.AABBs.people;
+	 for (let i=0; i<peopleAABBs.length; i++) {
+	 	this.shapes.AABB.draw( graphics_state, peopleAABBs[i].getTransformMatrix(), this.materials.AABB);
+	 }
+
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
 	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
@@ -292,11 +320,13 @@ class Assignment_Four_Scene extends Scene_Component
 				if (boundaryTransform != null) {
 					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
 				}
+				/*
 				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
 				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
 				if (buildingTransform != null) {
 					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
 				}
+				*/
 				//JOSH demo #2: how to use the function to check if camera is within a building
 				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
 			}

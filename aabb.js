@@ -42,6 +42,18 @@ class AABB {
     return Mat4.identity().times(Mat4.translation(center)).times(Mat4.scale([halfDiffX*2./1.96, halfDiffY*2./1.96, halfDiffZ*2./1.96]));
   }
 
+  // Updates AABB's bounds based on a TRANSLATION matrix that represents an incremental change in the shape the AABB surrounds
+  updateAABBWithTranslationMatrix(transform) {
+    const newMinBounds = transform.times(Vec.of(this.minX, this.minY, this.minZ, 1));
+    const newMaxBounds = transform.times(Vec.of(this.maxX, this.maxY, this.maxZ, 1));
+    this.minX = newMinBounds[0];
+    this.minY = newMinBounds[1];
+    this.minZ = newMinBounds[2];
+    this.maxX = newMaxBounds[0];
+    this.maxY = newMaxBounds[1];
+    this.maxZ = newMaxBounds[2];
+  }
+
   // Returns the smallest AABB for a shape based on the shape's points and transform matrix.
   static generateAABBFromPoints( points, transformMatrix ) {
     if (points.length < 1) return null;
@@ -63,6 +75,7 @@ class AABB {
   }
 
   // Returns the smallest AABB for an object composed of multiple shapes based on each subshape's points and transform matrix.
+  // Saves the object's main matrix.
   // @param shapes: an object containing the points and transform matrix of each subshape. e.g. for a car, parameter may look like
   //   {
   //     body: {
@@ -80,7 +93,8 @@ class AABB {
   //   The transform matrix is the final matrix you'd use to draw the subshape.
   //   MUST use the names "positions" and "transform" for each subshape's points and matrix. Other names are just to help you.
   //   Order of subshapes doesn't matter.
-  static generateAABBFromShapes( shapes ) {
+  // @param baseMatrix: transform matrix of the main subshape among shapes. i.e. you'd move all the shapes by changing this transform
+  static generateAABBFromShapes( shapes, baseMatrix ) {
     if (Object.keys(shapes).length === 0) return {};
 
     let minx, maxx, miny, maxy, minz, maxz;
@@ -106,11 +120,7 @@ class AABB {
       }
     }
 
-    const halfDiffX = (maxx-minx)/2., halfDiffY = (maxy-miny)/2., halfDiffZ = (maxz-minz)/2.;
-    const center = Vec.of(minx+halfDiffX,miny+halfDiffY,minz+halfDiffZ);
-    const matrix = Mat4.identity().times(Mat4.translation(center)).times(Mat4.scale([halfDiffX, halfDiffY, halfDiffZ]));
-
-    return new AABB(minx, maxx, miny, maxy, minz, maxz, matrix);
+    return new AABB(minx, maxx, miny, maxy, minz, maxz, baseMatrix);
   }
 
 

@@ -43,12 +43,12 @@ class CollisionManager {
         }
       -people: array of all people
         e.g. just like streetlamps.
-              l
+      -peopleMainSubshapeName: name of the main subshape of a person whose transform would be used to move the entire person
       -cars: array of all cars. Same format as people (i just wanted 1 relevant ex for justin & daniel each 8D)
       -web: TODO since depends on web being line or not
 
   */
-  constructor(boundaries, buildings, lampposts, spiderman, people, cars, web) {
+  constructor(boundaries, buildings, lampposts, spiderman, spidermanMainSubshapeName, people, peopleMainSubshapeName, cars, carsMainSubshapeName, web) {
     // Set up "cache" for extracting exactly what spiderman hits
     this.hitTargetsTransform = {
       boundary: null,
@@ -90,7 +90,7 @@ class CollisionManager {
     //this.regenerateSpidermanAABB(spiderman);
 
     //people
-    this.regeneratePeopleAABBs(people);
+    this.regeneratePeopleAABBs(people, peopleMainSubshapeName);
 
     //cars
     this.regenerateCarsAABBs(cars);
@@ -99,25 +99,34 @@ class CollisionManager {
   }
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
-  regenerateSpidermanAABB(spidermanShape) {
-    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape);
+  regenerateSpidermanAABB(spidermanShape, spidermanMainSubshapeName) {
+    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape, spidermanMainSubshapeName);
   }
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
-  regeneratePeopleAABBs(peopleShapes) {
+  regeneratePeopleAABBs(peopleShapes, peopleMainSubshapeName) {
     this.AABBs.people = [];
     for (let i=0; i<peopleShapes.length; i++) {
       const currShape = peopleShapes[i];
-      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape));
+      const mainTransform = currShape[peopleMainSubshapeName].transform;
+      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape, mainTransform));
     }
   }
 
   // regenerates all cars' AABBs from scratch. carsShapes follows same format as 'cars' in constructor
-  regenerateCarsAABBs(carsShapes) {
+  regenerateCarsAABBs(carsShapes, carMainSubshapeName) {
     this.AABBs.cars = [];
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
-      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape));
+      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, carMainSubshapeName));
+    }
+  }
+
+  // updates all peoples' AABBs with the translation change of the given matrix. Lets us keep old AABBs and speed up program
+  updatePeopleAABBsWithTranslationMatrix(transform) {
+    const peopleAABBs = this.AABBs.people;
+    for (let i=0; i<peopleAABBs.length; i++) {
+      peopleAABBs[i].updateAABBWithTranslationMatrix(transform);
     }
   }
 

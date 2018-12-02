@@ -43,7 +43,7 @@ class Person {
   }
 
   move(person_matrix,left_leg_matrix,right_leg_matrix) {
-    this.torso.position = this.torso.position.times(person_matrix);
+    this.torso.position = person_matrix.times(this.torso.position);
     //this.left_upper_leg.position = this.left_upper_leg.position.times(left_leg_matrix);
     //this.right_upper_leg.position = this.right_upper_leg.position.times(right_leg_matrix);
   }
