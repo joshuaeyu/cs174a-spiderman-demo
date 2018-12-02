@@ -122,11 +122,11 @@ class CollisionManager {
     }
   }
 
-  // updates all peoples' AABBs with the change of the given matrix. Lets us keep old AABBs and speed up program
-  updatePeopleAABBsWithChangeMatrix(transform) {
+  // updates all peoples' AABBs with the translation change of the given matrix. Lets us keep old AABBs and speed up program
+  updatePeopleAABBsWithTranslationMatrix(transform) {
     const peopleAABBs = this.AABBs.people;
     for (let i=0; i<peopleAABBs.length; i++) {
-      peopleAABBs[i].updateAABBWithChangeMatrix(transform);
+      peopleAABBs[i].updateAABBWithTranslationMatrix(transform);
     }
   }
 

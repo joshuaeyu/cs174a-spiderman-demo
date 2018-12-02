@@ -251,7 +251,7 @@ class Assignment_Four_Scene extends Scene_Component
 	 		this.people[i].move(Mat4.translation([0,0,2*dt]));
 	 	}
 	 //this.collisionManager.regeneratePeopleAABBs(peopleArray);
-	 this.collisionManager.updatePeopleAABBsWithChangeMatrix(Mat4.translation([0,0,2*dt]));
+	 this.collisionManager.updatePeopleAABBsWithTranslationMatrix(Mat4.translation([0,0,2*dt]));
 
 	 const peopleAABBs = this.collisionManager.AABBs.people;
 	 for (let i=0; i<peopleAABBs.length; i++) {
