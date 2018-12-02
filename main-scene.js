@@ -36,13 +36,13 @@ class Assignment_Four_Scene extends Scene_Component
       	green: context.get_instance( Phong_Shader ).material( Color.of (0.18,0.55,0.34,1) ),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.25) ),
       	buildings: [
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/1.png", true) } ),
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/2.png", true) } ),
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/3.png", true) } )	
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/1.png", false) } ),
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/2.png", false) } ),
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/3.png", false) } )	
       	],
-      	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/ground.png", true) }),
-      	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", true) }),
-      	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", true) }),
+      	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/ground.png", false) }),
+      	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", false) }),
+      	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", false) }),
       	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) )
       }
 
@@ -214,9 +214,9 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  //draw ground and ceiling
 	  const groundTransform = allWorldTransforms.ground;
-	  this.shapes.ground.draw( graphics_state, groundTransform, this.materials.ground);
+	  this.shapes.ground.draw( graphics_state, groundTransform, this.materials.tan); //this.materials.ground);
 	  const ceilingTransform = allWorldTransforms.ceiling;
-	  this.shapes.ground.draw( graphics_state, ceilingTransform, this.materials.sky);
+	  this.shapes.ground.draw( graphics_state, ceilingTransform, this.materials.tan); //this.materials.sky);
 
 	  //draw walls
 	  const wallTransforms = allWorldTransforms.walls;
@@ -225,6 +225,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.shapes.wall.draw(graphics_state, transform, this.materials.skyWall);
 	  }
 	  
+	  /*
 	  // draw all buildings
 	  for (let i=0; i<this.buildings.length; i++) {
 	  	const building = this.buildings[i];
@@ -274,12 +275,13 @@ class Assignment_Four_Scene extends Scene_Component
 		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
 	 }	 
 	 
+	 
 	  // Limit # of AABB updates
 	  var count = 0;
 	  if (count == 0)	
 	  {
-		this.collisionManager.regenerateCarsAABBs(carArray);
-		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
+		//this.collisionManager.regenerateCarsAABBs(carArray);
+		//this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
 	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
 	 	 count++;
 	  }
@@ -301,6 +303,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.shapes.lamp.draw( graphics_state, currTransform, this.materials.gray);
 	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 	  }
+	  */
 
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
@@ -310,7 +313,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
 	  // Create spiderman's AABB
-	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
+	  //const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
 	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 	  
 	  //JUSTIN - turn gravity on

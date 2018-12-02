@@ -132,6 +132,7 @@ class CollisionManager {
 
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
   tryMoveSpiderman(spidermanShape) {
+    return true;
     const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
     this.hitTargetsTransform = {
       boundary: null,
