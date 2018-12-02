@@ -64,7 +64,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(100,50,50,8);
+	  this.worldTransforms = new WorldTransforms(75,50,50,8);
 
 	  // now format all world objects for collision manager.
 
@@ -201,6 +201,10 @@ class Assignment_Four_Scene extends Scene_Component
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
 		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
+		//JUSTIN - Allow object to jump
+		this.key_triggered_button( "Jump", [ "q" ], () => { this.spiderman.jump(); } );
+		//JUSTIN - Shoot Out Web
+		this.key_triggered_button( "Shoot Web", [ "x" ], () => {this.spiderman.change_web(); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -290,12 +294,6 @@ class Assignment_Four_Scene extends Scene_Component
 	 	this.shapes.AABB.draw( graphics_state, peopleAABBs[i].getTransformMatrix(), this.materials.AABB);
 	 }
 
-	  // JOSH - Use model transform stored in Spiderman object.
-	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
-	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
-
-	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan);
-	  
 	  // GLADYS - draw justin's lamppost
 	  const lampTransforms = allWorldTransforms.lampposts;
 	  for (let i=0; i<lampTransforms.length; i++) {
@@ -304,7 +302,21 @@ class Assignment_Four_Scene extends Scene_Component
 	  	//this.shapes.ball.draw(graphics_state,Mat4.identity().times(Mat4.translation([7.5,8,4])).times(Mat4.scale([0.8,0.8,0.8])),this.materials.light);
 	  }
 
-	  // Check input and attempt to move spiderman for the next frame
+	  // JOSH - Use model transform stored in Spiderman object.
+	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
+	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
+
+	  this.spiderman.update();
+	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
+
+	  // Create spiderman's AABB
+	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
+	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
+	  
+	  //JUSTIN - turn gravity on
+	  //this.spiderman.get_position();
+
+	  // Check input and move Spiderman for the next frame
 	  for (let dirString in this.movement_directions) {
 		  if (this.movement_directions[dirString]) {
 		  	const nextTransform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));
@@ -312,7 +324,13 @@ class Assignment_Four_Scene extends Scene_Component
 				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
 			};
 
-			if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape)) {
+			const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape);
+			
+			// if Spiderman hit a building, stick to the wall
+			const shouldChangeContact = (this.collisionManager.getBuildingThatSpidermanJustHit() != null);
+			this.spiderman.change_contact(shouldChangeContact);
+
+			if (canMove) {
 				this.spiderman.keyboard_move(dirString);
 			}
 			else {
@@ -334,46 +352,4 @@ class Assignment_Four_Scene extends Scene_Component
 		 }
 	  }
   }
-}
-
-class Texture_Scroll_X extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
-}
-
-class Texture_Rotate extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
 }

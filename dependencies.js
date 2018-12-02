@@ -346,6 +346,68 @@ class Axis_Arrows extends Shape                                   // An axis set
     }
 }
 
+//lamp post
+//notes on the lamp post:
+//	to place on ground, will need to place it 2 units above the ground
+//  a circle and light need to be scaled at 0.8 and placed at +4.5 x units and +4 y-units of where the lamp post is created
+window.lamp = window.classes.lamp =
+class lamp extends Shape     
+  { constructor()
+      { super( "positions", "normals", "texture_coords" );
+      	  Closed_Cone.insert_transformed_copy_into(this,[15,15],Mat4.identity().times(Mat4.translation([0,-4,0]).times(Mat4.rotation(-Math.PI/2,Vec.of(1,0,0)))));
+          Cube.insert_transformed_copy_into(this,[],Mat4.identity().times(Mat4.scale([0.25,4,0.25])));
+          Cube.insert_transformed_copy_into(this,[],Mat4.identity().times(Mat4.translation([1.75,4,0])).times(Mat4.scale([2,0.25,0.25])));
+          Half_Sphere.insert_transformed_copy_into(this,[15,15],Mat4.identity().times(Mat4.translation([4.5,4,0]).times(Mat4.rotation(-Math.PI/2,Vec.of(1,0,0)))));
+          Subdivision_Sphere.insert_transformed_copy_into(this,[4],Mat4.identity().times(Mat4.translation([4.5,4,0])).times(Mat4.scale([0.75,0.75,0.75])));
+} }
+
+window.Body = window.classes.Body =
+class Body          // Store and update the properties of a 3D body that increntally moves from its previous place due to velocities.
+{ constructor(               shape, material, size )
+    { Object.assign( this, { shape, material, size } ) }
+  emplace( location_matrix, linear_velocity, angular_velocity, spin_axis = Vec.of(0,0,0).randomized(1).normalized() )
+    { this.center   = location_matrix.times( Vec.of( 0,0,0,1 ) ).to3();
+      this.rotation = Mat4.translation( this.center.times( -1 ) ).times( location_matrix );
+      this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
+      this.drawn_location = location_matrix;                                      // This gets replaced with an interpolated quantity.
+      return Object.assign( this, { linear_velocity, angular_velocity, spin_axis } )
+    }
+  advance( time_amount )   // Perform forward Euler to advance the linear and angular velocities one time-step.
+    { this.previous = { center: this.center.copy(), rotation: this.rotation.copy() };
+                                                              // Apply the velocities scaled proportionally to real time (time_amount).
+      this.center = this.center.plus( this.linear_velocity.times( time_amount ) );                        // Apply linear velocity.
+      this.rotation.pre_multiply( Mat4.rotation( time_amount * this.angular_velocity, this.spin_axis ) ); // Apply angular velocity.
+    }
+  blend_rotation( alpha )         // We're naively just doing a linear blend of the rotations.  This looks
+    {                             // ok sometimes but otherwise produces shear matrices, a wrong result.
+
+                                  // TODO:  Replace this function with proper quaternion blending, and perhaps 
+                                  // store this.rotation in quaternion form instead for compactness.
+       return this.rotation.map( (x,i) => Vec.from( this.previous.rotation[i] ).mix( x, alpha ) );
+    }
+  blend_state( alpha )            // Compute the final matrix we'll draw using the previous two physical locations
+                                  // the object occupied.  We'll interpolate between these two states as described
+                                  // at the end of the "Fix Your Timestep!" article by Glenn Fiedler.
+    { this.drawn_location = Mat4.translation( this.previous.center.mix( this.center, alpha ) )
+                                      .times( this.blend_rotation( alpha ) )
+                                      .times( Mat4.scale( this.size ) );
+    }
+  check_if_colliding( b, a_inv, shape )   // Collision detection function.
+                                          // DISCLAIMER:  The collision method shown below is not used by anyone; it's just very quick 
+                                          // to code.  Making every collision body an ellipsoid is kind of a hack, and looping 
+                                          // through a list of discrete sphere points to see if the ellipsoids intersect is *really* a 
+                                          // hack (there are perfectly good analytic expressions that can test if two ellipsoids 
+                                          // intersect without discretizing them into points).
+    { if ( this == b ) return false;      // Nothing collides with itself.
+      var T = a_inv.times( b.drawn_location );                      // Convert sphere b to the frame where a is a unit sphere.
+      for( let p of shape.positions )                               // For each vertex in that b,
+        { var Tp = T.times( p.to4(1) ).to3();                       // Shift to the coordinate frame of a_inv*b
+          if( Tp.dot( Tp ) < 1.1 )                                  // Check if in that coordinate frame it penetrates the unit sphere
+            return true;                                            // at the origin.  Leave .1 of leeway.     
+        }
+      return false;
+    }
+}
 
 window.Basic_Shader = window.classes.Basic_Shader =
 class Basic_Shader extends Shader             // Subclasses of Shader each store and manage a complete GPU program.  This Shader is 
