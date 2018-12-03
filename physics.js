@@ -21,6 +21,21 @@ class Physics
 		this.ang_acc = 0;
 		this.grounded = true;
 	}
+	reset( transform ) 
+	{
+		this.mass = 10; //defined in kg
+		this.update_pos( transform );
+		this.permanent_ground = 1;
+		this.default_velocity = 10;
+		this.velocity_xz = 10;
+		this.velocity_y = 0;
+		this.up_velocity = 2; //for when he is climbing up walls
+		this.acc_grav = -25; 
+		this.rotation = -0.0996686525; //arctan(10/100) 10 is units in xz plane 100 is units in y axis
+		this.ang_vel = 0;
+		this.ang_acc = 0;
+		this.grounded = true;
+	}
 	//update position function
 	update_pos(spidermanUnscaledPosMat){
 		this.spiderman_PosMat = spidermanUnscaledPosMat;

@@ -81,7 +81,8 @@ class Spiderman
       if (!this.contact) 
         this.building_transform = building_transform;        
       
-      this.spidermanToBuilding_Vec = this.building_transform.times(Vec.of(0,0,0,1)).to3().minus(spiderpos);
+      try { this.spidermanToBuilding_Vec = this.building_transform.times(Vec.of(0,0,0,1)).to3().minus(spiderpos); }
+      catch(e) { return; }
       let x = this.spidermanToBuilding_Vec[0], z = this.spidermanToBuilding_Vec[2];
       
       // If attaching to new wall, determine which side of building
@@ -183,6 +184,17 @@ class Spiderman
 	  else
 		  this.webbed = true;
 	  
+  }
+
+  reset_position() 
+  {
+  	this.physics.reset( this.model_transform );
+	this.webbed = false;
+	this.contact = false;
+	this.fall_from_web = false;
+	this.prev_contact = false;
+	this.camera.translate( this.model_transform );
+	this.camera.look_forward;
   }
 //----------------------------------------------------------------------------------// 
 

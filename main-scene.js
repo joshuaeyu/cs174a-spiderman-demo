@@ -49,6 +49,16 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
 
+	  //JUSTIN - sounds
+	  this.sounds = {web: new Audio("assets/sounds/web.wav"),
+	  				 fly: new Audio("assets/sounds/fly.wav"),
+	  				 go: new Audio("assets/sounds/go.wav"),
+	  				 gwg: new Audio("assets/sounds/go_web_go.wav"),
+	  				 shazam: new Audio("assets/sounds/shazam.wav"),
+	  				 uua: new Audio("assets/sounds/up_up_and_away.wav")};
+	  				 
+	  this.strings = ["web","fly","go","gwg","shazam","uua"];
+
 	  // JOSH - Spiderman object
 	  this.spiderman = new Spiderman( context.globals.graphics_state );
 
@@ -57,15 +67,16 @@ class Assignment_Four_Scene extends Scene_Component
 	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
 	  };
 
-	  // JOSH - Pointer capture and mouse tracking
+	  // JOSH - Pointer capture and mouse controls
 	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
 	  document.body.addEventListener( "mousemove", (m) => {
 	  	if (document.pointerLockElement === document.getElementById("canvas1"))
 	  	  this.spiderman.camera_swivel( m ); } );
 	  document.body.addEventListener( "mousedown", () => {
-	  	if (document.pointerLockElement === document.getElementById("canvas1"))
-	  	  this.spiderman.change_web();
-	  })
+	  	if (document.pointerLockElement === document.getElementById("canvas1")) {
+			this.spiderman.change_web();
+	  		this.play_sound(this.strings[Math.floor(Math.random()*6)]);
+	  	} } );
 	  document.body.addEventListener( "mouseup", () => {
 	  	if (document.pointerLockElement === document.getElementById("canvas1"))
 	  	  this.spiderman.change_web();
@@ -183,6 +194,12 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // ============= end of static world generation
     }
+    play_sound( name, volume = 1 )
+	{ if( 0 < this.sounds[ name ].currentTime && this.sounds[ name ].currentTime < .3 ) return;
+	  this.sounds[ name ].currentTime = 0;
+	  this.sounds[ name ].volume = Math.min(Math.max(volume, 0), 1);;
+	  this.sounds[ name ].play();
+	}
     make_control_panel()
     { // Takes user input for button presses
         this.key_triggered_button( "Move Forward", [ "w" ], () => this.movement_directions.forward = true, undefined,
@@ -196,6 +213,9 @@ class Assignment_Four_Scene extends Scene_Component
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
 		this.key_triggered_button( "Jump", [ " " ], () => { this.spiderman.jump(); } );
+		this.key_triggered_button( "Reset position (Go home)", ["h"], () => { 
+			this.spiderman.model_transform = Mat4.translation([0,1,0]);
+			this.spiderman.reset_position(); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -303,22 +323,26 @@ class Assignment_Four_Scene extends Scene_Component
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
 
 	  // Check if Spiderman swings into a building and update contact status accordingly
-	  if (!this.spiderman.contact) {
+	  var hitNonBuilding = false;
+	  if (!this.spiderman.contact)
 		if (this.spiderman.webbed) {
 		  let check_collision = {body: {positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix}};
-		  this.spiderman.change_contact(!this.collisionManager.tryMoveSpiderman(check_collision));
+		  let inContact = !this.collisionManager.tryMoveSpiderman(check_collision);
+		  if (!this.collisionManager.getBoundaryThatSpidermanJustHit()) 
+		  	this.spiderman.change_contact(inContact);
+		  else	
+		  	this.spiderman.change_web();
 		}
-	  }
-	
+	  
       // Update Spiderman's transform and draw
 	  if (!this.spiderman.camera.inBirdsEye) {
 	  	this.spiderman.physics_update();
-	  	this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
+	  	this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan );
 	  }
 	  else {
 	  	let scale = 1.3+0.25*Math.cos(10*t);
-	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(5,6,6).times(scale))), this.materials.pure_red );
-	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(-5,6,6).times(scale))), this.materials.pure_red );
+	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(4,6,6).times(scale))), this.materials.pure_red );
+	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(-4,6,6).times(scale))), this.materials.pure_red );
       }
 
 	  // Check input and move Spiderman for the next frame
@@ -337,7 +361,7 @@ class Assignment_Four_Scene extends Scene_Component
 		  	  this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
 		    }
 		    // Move SM appropriately
-		    if (canMove // Regular collisions
+		    else if (canMove // Regular collisions
 				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape) ) // Make an exception when SM hits a building
 		    {
 			  this.spiderman.setNextShape(nextSpidermanShape);
@@ -356,46 +380,4 @@ class Assignment_Four_Scene extends Scene_Component
 		 }
 	 }
   }
-}
-
-class Texture_Scroll_X extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
-}
-
-class Texture_Rotate extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
 }

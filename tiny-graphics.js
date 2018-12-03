@@ -471,7 +471,7 @@ class Webgl_Manager      // This class manages a whole graphics program for one 
         || w.mozRequestAnimationFrame || w.oRequestAnimationFrame || w.msRequestAnimationFrame
         || function( callback, element ) { w.setTimeout(callback, 1000/60);  } )( window );
     }
-  set_size( dimensions = [ 1080, 600 ] )                // This function allows you to re-size the canvas anytime.  
+  set_size( dimensions = [ 1080*1.2, 600*1.2 ] )                // This function allows you to re-size the canvas anytime.  
     { const [ width, height ] = dimensions;             // To work, it must change the size in CSS, wait for style to re-flow, 
       this.canvas.style[ "width" ]  =  width + "px";    // and then change the size in canvas attributes.
       this.canvas.style[ "height" ] = height + "px";     
@@ -561,7 +561,7 @@ class Scene_Component       // The Scene_Component superclass is the base class 
 
 window.Canvas_Widget = window.tiny_graphics.Canvas_Widget =
 class Canvas_Widget                    // Canvas_Widget embeds a WebGL demo onto a website, along with various panels of controls.
-{ constructor( element, scenes, show_controls = true )   // One panel exists per each scene that's used in the canvas.  You can use up
+{ constructor( element, scenes, show_controls = false )   // One panel exists per each scene that's used in the canvas.  You can use up
     { this.create( element, scenes, show_controls )      // to 16 Canvas_Widgets; browsers support up to 16 WebGL contexts per page.    
 
       const rules = [ ".canvas-widget { width: 1080px; background: DimGray }",
