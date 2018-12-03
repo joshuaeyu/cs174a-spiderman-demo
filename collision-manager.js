@@ -87,7 +87,7 @@ class CollisionManager {
     }
 
     //spiderman
-    this.regenerateSpidermanAABB(spiderman);
+    this.regenerateSpidermanAABB(spiderman, spidermanMainSubshapeName);
 
     //people
     this.regeneratePeopleAABBs(people, peopleMainSubshapeName);
@@ -169,6 +169,10 @@ class CollisionManager {
     }
   }
 
+  tryMovePerson(personShape) {
+    //todo
+  }
+
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
   tryMoveSpiderman(spidermanShape) {
     const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
@@ -177,7 +181,8 @@ class CollisionManager {
       building: null,
       lamppost: null,
       person: null,
-      car: null
+      car: null,
+      coin: null
     };
     let canMove = true;
 
@@ -213,6 +218,7 @@ class CollisionManager {
     for (let i=0; i<carsAABBs.length; i++) {
         if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
             canMove = false;
+            break;
         }
     }
 
@@ -220,6 +226,7 @@ class CollisionManager {
     for (let i=0; i<peopleAABBs.length; i++) {
         if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
             canMove = false;
+            break;
         }
     }
 
@@ -227,6 +234,8 @@ class CollisionManager {
     for (let i=0; i<coinsAABBs.length; i++) {
         if (!AABB.doAABBsNotIntersect(newSpidermanAABB, coinsAABBs[i])) {
             canMove = false;
+            this.hitTargetsTransform.coin = coinsAABBs[i].baseMatrix;
+            break;
         }
     }
 
@@ -276,11 +285,20 @@ class CollisionManager {
     return this.hitTargetsTransform.building;
   }
 
-  tryMovePerson(personShape) {
-    //todo
+  // gets the transform matrix of the coin spiderman last hit. if none, returns null.
+  // should be called after tryMoveSpiderman() to be useful
+  getCoinThatSpidermanJustHit() {
+    return this.hitTargetsTransform.coin;
   }
 
-  tryMoveCar(carShape) {
-    //todo
+  // removes the coin AABB with baseMatrix == the given transform
+  removeCoinAABB(transform) {
+    const allCoinTransforms = this.AABBs.coins.map(aabb => aabb.baseMatrix);
+    const index = allCoinTransforms.indexOf(transform, 1);
+    if (index > -1) {
+      // guaranteed that item shares same index in both AABB & transform arrays
+      this.AABBs.coins.splice(index, 1);
+    }
   }
+
 }

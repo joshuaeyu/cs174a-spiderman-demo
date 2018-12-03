@@ -51,9 +51,9 @@ class WorldTransforms {
     const numCellsBetweenPeople = 1; //car uses same one
 
     // coin generation parameters
-    const coinOffset = 2;
-    const coinMinHeight = 4;
-    const coinMaxHeight = 12;
+    const coinOffset = 3;
+    const coinMinHeight = 1.5;
+    const coinMaxHeight = 1.5;
     const assumedLampSize = 3;
 
     // world's grid code. Add your objects here, within a cell or something!

@@ -65,8 +65,12 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
+	  // Initialize game
+	  const numCoins = 10;
+	  this.coinCounter = new CoinCounter(numCoins);
+
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(75,50,50,8,10);
+	  this.worldTransforms = new WorldTransforms(75,50,50,8,numCoins);
 
 	  // now format all world objects for collision manager.
 
@@ -383,6 +387,15 @@ class Assignment_Four_Scene extends Scene_Component
 				const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
 				if (boundaryTransform != null) {
 					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
+				}
+				//if hit coin, remove it and its AABB. Update coin counter display
+				const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
+				if (coinTransform != null) {
+					coinTransforms.splice(coinTransforms.indexOf(coinTransform, 1), 1);
+					console.log(this.worldTransforms.getTransforms().coins.length);
+					this.collisionManager.removeCoinAABB(coinTransform);
+					console.log(this.collisionManager.AABBs.coins.length);
+					this.coinCounter.incrementCount();
 				}
 				/*
 				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
