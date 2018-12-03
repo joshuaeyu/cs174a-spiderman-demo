@@ -340,7 +340,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  if (!this.spiderman.contact) {
 		if (this.spiderman.webbed) {
 		  let check_collision = {body: {positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix}};
-		  this.spiderman.change_contact(!this.collisionManager.tryMoveSpiderman(check_collision));
+		  this.spiderman.change_contact(!this.collisionManager.tryMoveSpiderman(check_collision, "body"));
 		}
 	  }
 	
@@ -400,14 +400,13 @@ class Assignment_Four_Scene extends Scene_Component
         
 		    // Move SM appropriately
 		    if (canMove // Regular collisions
-				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape) ) // Make an exception when SM hits a building
+				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape, "body") ) // Make an exception when SM hits a building
 		    {
 			  this.spiderman.setNextShape(nextSpidermanShape);
 			  this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building
 		    }
         
- 			}
-		 }
+		}
 	 }
-  }
+ }
 }

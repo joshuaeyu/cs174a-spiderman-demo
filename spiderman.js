@@ -111,7 +111,7 @@ class Spiderman
           ground = 1; // Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]; 
       const nextTransform = this.simulate_keyboard_move("forward").times(Mat4.scale([.5,1,1]));
       const nextShape = { body: { positions: this.nextShape.body.positions, transform: nextTransform } };
-      if ( this.contact && this.collisionManager.findBuildingThatSpidermanHits(nextShape) === null ) // If wall is no longer in front, fall
+      if ( this.contact && this.collisionManager.findBuildingThatSpidermanHits(nextShape, "body") === null ) // If wall is no longer in front, fall
         this.change_contact(false);
 
   	}
