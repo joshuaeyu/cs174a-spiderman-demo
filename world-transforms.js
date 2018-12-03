@@ -34,7 +34,13 @@ class WorldTransforms {
       cars: [],
       coins: []
     };
+    this.takenCellIndices = [];
+    this.coinTransformToCoords = {};
 
+    this.len = len;
+    this.boundaryOffset = boundaryOffset;
+    this.numCells = numCells;
+    this.numCoins = numCoins;
     // building generation parameters. Change them here
     const gridLength = (len+boundaryOffset)*2; //since grid will refer to wall-bounded world, not boundary-bounded
     const cellLength = gridLength/numCells;
@@ -114,6 +120,7 @@ class WorldTransforms {
       }
     }
     shuffleArray(allPossibleCells);
+    this.allPossibleCells = allPossibleCells;
 
     // generate coins' transforms based on cells between buildings and lamps.
     // use lampOffset and buildingOffset to avoid colliding with them
@@ -164,20 +171,125 @@ class WorldTransforms {
         .times(Mat4.translation([0,Math.random()*(coinMaxHeight-coinMinHeight)+coinMinHeight,0])))
         .times(Mat4.scale([0.8,1,1]));
       this.transforms.coins.push(transform);
+      this.takenCellIndices.push({x: cellX, y: cellY});
+      this.coinTransformToCoords[transform.to_string()] = {x: cellX, y: cellY};
     }
   }
   getTransforms() {
     return this.transforms;
   }
   removeCoinTransform(transform) {
-    const index = this.transforms.coins.findIndex(function(t) {
+    let ind = this.transforms.coins.findIndex(function(t) { 
       return t.equals(transform);
     });
-    if (index > -1) {
-      this.transforms.coins.splice(index, 1);
+    if (ind > -1) {
+      this.transforms.coins.splice(ind, 1);
+      let oldCoord = this.coinTransformToCoords[transform.to_string()];
+      if (oldCoord == null) {
+        console.log('error: coinTransformToCoords inaccurate, old transform wasnt stored');
+      }
+      let index = this.takenCellIndices.findIndex(function (coord) {
+        return coord.x == oldCoord.x && coord.y == oldCoord.y;
+      });
+      if (index <= -1) {
+        console.log("Error: takenCellIndices record inaccurate");
+      }
+      else {
+        this.takenCellIndices.splice(index, 1);
+      };
+      this.coinTransformToCoords[transform.to_string()] = null;
     }
     else {
       console.log("error: world-transforms called on transform that shouldnt exist");
+    }
+  }
+  generateNewCoinTransform() {
+    // get a new coord that isnt taken
+    let takenCellIndices=  this.takenCellIndices;
+    let newCoords = this.allPossibleCells.filter(possibleCoord => takenCellIndices.findIndex(function (coord) {
+        return coord.x === possibleCoord.x && coord.y === possibleCoord.y;
+    }) <= -1);
+    const newCoord = newCoords[Math.floor(Math.random()*newCoords.length)];
+
+    if (newCoord == undefined) {
+      console.log("something went wrong. 1 coord should always be available");
+      return null;
+    }
+    else {
+        const len = this.len;
+        const boundaryOffset = this.boundaryOffset;
+        const numCells = this.numCells;
+        const numCoins = this.numCoins;
+
+        // building generation parameters. Change them here
+        const gridLength = (len+boundaryOffset)*2; //since grid will refer to wall-bounded world, not boundary-bounded
+        const cellLength = gridLength/numCells;
+        const buildingLength = 8;
+        const buildingOffset = (cellLength - buildingLength)/2;
+        const buildingMinHeight = 18;
+        const buildingMaxHeight = 25;
+
+        // lamppost generation parameters
+        const numCellsBetweenLamps = 4;
+        const lampOffset = 10; // w.r.t. right side of cell
+
+        // people/car generation parameters
+        const numCellsBetweenPeople = 1; //car uses same one
+
+        // coin generation parameters
+        const coinOffset = 3;
+        const coinMinHeight = 1.5;
+        const coinMaxHeight = buildingMaxHeight;
+        const assumedLampSize = 3;
+
+      const cellX = newCoord.x;
+      const cellY = newCoord.y;
+
+      // Choose x randomly first. y could depend on it
+      const baseCoord = gridLength/-2;
+      const finalPosX = Math.random()*cellLength;
+      let finalPosY;
+      if (cellX % numCellsBetweenLamps == 0) {
+        // In cell with lamps on top right or bottom left, lampOffset away from each cell boundary.
+        // Assume lamp takes up lampOffset+assumedLampSize from each cell boundary on top right and bottom left.
+        // Also assumes lampOffset < buildingOffset. Cell wouldn't make sense otherwise
+        // Dont place coin there
+        const totalLampOffset = lampOffset+assumedLampSize+coinOffset;
+        if (finalPosX < totalLampOffset) {
+          finalPosY = Math.random()*(cellLength-totalLampOffset);
+        }
+        else if (finalPosX >= totalLampOffset && finalPosX <= (cellLength - totalLampOffset)){
+          finalPosY = Math.random()*totalLampOffset;
+          if (Math.random() > 0.5) {
+            finalPosY += cellLength - totalLampOffset;
+          }
+        }
+        else {
+          finalPosY = Math.random()*(cellLength - totalLampOffset) + totalLampOffset;
+        }
+      }
+      else {
+        //Just need to avoid the building in the cell
+        const totalBuildingOffset = buildingOffset + coinOffset;
+        if (finalPosX < totalBuildingOffset || finalPosX > (cellLength - totalBuildingOffset)) {
+          finalPosY = Math.random()*cellLength;
+        }
+        else {
+          finalPosY = Math.random()*totalBuildingOffset;
+          if (Math.random() > 0.5) {
+            finalPosY += cellLength - totalBuildingOffset;
+          }
+        }
+      }
+      
+      const transform = Mat4.identity()
+        .times(Mat4.translation([cellX*cellLength+finalPosX+baseCoord,0,cellY*cellLength+finalPosY+baseCoord])
+        .times(Mat4.translation([0,Math.random()*(coinMaxHeight-coinMinHeight)+coinMinHeight,0])))
+        .times(Mat4.scale([0.8,1,1]));
+      this.transforms.coins.push(transform);
+      this.takenCellIndices.push({x: cellX, y: cellY});
+      this.coinTransformToCoords[transform.to_string()] = {x: cellX, y: cellY};
+      return transform;
     }
   }
 }

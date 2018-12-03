@@ -429,13 +429,15 @@ class Assignment_Four_Scene extends Scene_Component
 		  	  this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
 		    }
         
-        //if hit coin, remove it and its AABB. Update coin counter display
-				const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
-				if (coinTransform != null) {
-					this.worldTransforms.removeCoinTransform(coinTransform);
-					this.collisionManager.removeCoinAABB(coinTransform);
-					this.coinCounter.incrementCount();
-				}
+        	//if hit coin, remove it and its AABB. Update coin counter display. Generate new coin in untaken cell
+			const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
+			if (coinTransform != null) {
+				this.worldTransforms.removeCoinTransform(coinTransform);
+				this.collisionManager.removeCoinAABB(coinTransform);
+				this.coinCounter.incrementCount();
+				let newTransform = this.worldTransforms.generateNewCoinTransform();
+				this.collisionManager.generateCoinAABB({ positions: this.shapes.coin.positions, transform: newTransform });
+			}
         
 		    // Move SM appropriately
 		    else if (canMove // Regular collisions
