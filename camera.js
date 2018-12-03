@@ -93,9 +93,9 @@ class Camera
   {
     // Bird's-eye view is when the camera is positioned 125 units above the origin looking straight down
     this.globals.gs.camera_transform = !this.inBirdsEye ?
-        Mat4.look_at( Vec.of(0,150,0), Vec.of(0,0,0), Vec.of(0,0,-1) ) : this.locals.camera_Mat;
+        Mat4.look_at( Vec.of(0,100,0), Vec.of(0,0,0), Vec.of(0,0,-1) ) : this.locals.camera_Mat;
     this.globals.gs.projection_transform = !this.inBirdsEye ?
-        Mat4.orthographic( -75, 75, -75, 75, .1, 150 ) :  Mat4.perspective( Math.PI/4, 1.8, .1, 1000 );
+        Mat4.orthographic( -75, 75, -75, 75, .1, 200 ) :  Mat4.perspective( Math.PI/4, 1.8, .1, 1000 );
     this.inBirdsEye = !this.inBirdsEye;
   }
   update_and_push()
