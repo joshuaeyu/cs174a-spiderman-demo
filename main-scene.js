@@ -66,7 +66,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(75,50,50,8);
+	  this.worldTransforms = new WorldTransforms(75,100,50,8);
 
 	  // now format all world objects for collision manager.
 
@@ -185,21 +185,17 @@ class Assignment_Four_Scene extends Scene_Component
     }
     make_control_panel()
     { // Takes user input for button presses
-        this.key_triggered_button( "Move Forward", [ "i" ], () => this.movement_directions.forward = true, undefined,
+        this.key_triggered_button( "Move Forward", [ "w" ], () => this.movement_directions.forward = true, undefined,
         													                          () => this.movement_directions.forward = false );
-        this.key_triggered_button( "Move Left", [ "j" ], () => this.movement_directions.left = true, undefined,
+        this.key_triggered_button( "Move Left", [ "a" ], () => this.movement_directions.left = true, undefined,
         												                         () => this.movement_directions.left = false );
-        this.key_triggered_button( "Move Backward", [ "k" ], () => this.movement_directions.backward = true, undefined,
+        this.key_triggered_button( "Move Backward", [ "s" ], () => this.movement_directions.backward = true, undefined,
         													                           () => this.movement_directions.backward = false );
-        this.key_triggered_button( "Move Right", [ "l" ], () => this.movement_directions.right = true, undefined,
+        this.key_triggered_button( "Move Right", [ "d" ], () => this.movement_directions.right = true, undefined,
         												                          () => this.movement_directions.right = false );
-       	// JOSH - Toggle "map" view
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
-		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
-		//JUSTIN - Allow object to jump
-		this.key_triggered_button( "Jump", [ "q" ], () => { this.spiderman.jump(); } );
-		//JUSTIN - Shoot Out Web
+		this.key_triggered_button( "Jump", [ " " ], () => { this.spiderman.jump(); } );
 		this.key_triggered_button( "Shoot Web", [ "x" ], () => {this.spiderman.change_web(); } );
     }
     display( graphics_state )
@@ -300,7 +296,7 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
-	  //this.spiderman.update();
+// 	  this.spiderman.update();
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
 	  
@@ -321,11 +317,11 @@ class Assignment_Four_Scene extends Scene_Component
 			const shouldChangeContact = (this.collisionManager.getBuildingThatSpidermanJustHit() != null);
 			this.spiderman.change_contact(shouldChangeContact);
 
-// 			if (canMove) {
-// 			  this.spiderman.setNextShape(nextSpidermanShape);
-// 			  this.spiderman.keyboard_move(dirString);
-// 			}
-// 			else {
+			if (canMove) {
+			  this.spiderman.setNextShape(nextSpidermanShape);
+			  this.spiderman.keyboard_move(dirString);
+			}
+			else {
 			  //if hit boundary, highlight it
 			  const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
 			  if (boundaryTransform != null) {
@@ -346,7 +342,7 @@ class Assignment_Four_Scene extends Scene_Component
 			*/
 			//JOSH demo #2: how to use the function to check if camera is within a building
 			//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
-// 			}
+			}
 		 }
 	 }
   }

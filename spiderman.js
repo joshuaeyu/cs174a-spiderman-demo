@@ -18,11 +18,6 @@ class Spiderman
 	this.webbed = false; 
     Object.defineProperty( this, 'VELOCITY', { value: 15, writable: false } ); // Adjustable
   }
-  physics_move( displacement_Vec, distance = this.physics.velocity_xz * this.gs.animation_delta_time/1000 ) //use velocity derived from physics class
-  {
-    this.model_transform = this.model_transform.times( Mat4.translation( displacement_Vec.times(distance) ) );
-    this.camera.translate( this.model_transform );
-  }
   simulate_keyboard_move( direction )
   {
     // Gladys - exactly Josh's keyboard_move() except it doesn't change Spiderman. Instead, returns Spiderman's new would-be position.
