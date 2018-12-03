@@ -380,5 +380,4 @@ class CollisionManager {
       console.log("Error in collision-manager: coin AABB map inconsistent with transforms");
     }
   }
-
 }

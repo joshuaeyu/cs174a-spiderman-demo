@@ -2,8 +2,6 @@ window.Assignment_Four_Scene = window.classes.Assignment_Four_Scene =
 class Assignment_Four_Scene extends Scene_Component
 { constructor( context, control_box )     // The scene begins by requesting the camera, shapes, and materials it will need.
     { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
-      if( !context.globals.has_controls   )
-          context.register_scene_component( new Movement_Controls( context, control_box.parentElement.insertCell() ) );
 
       const r = context.width/context.height;
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
@@ -49,10 +47,14 @@ class Assignment_Four_Scene extends Scene_Component
       }
 
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
-     
 
 	  // JOSH - Spiderman object
 	  this.spiderman = new Spiderman( context.globals.graphics_state );
+
+	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
+	  const spidermanShape = {
+	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
+	  };
 
 	  // JOSH - Pointer capture and mouse tracking
 	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
@@ -116,38 +118,28 @@ class Assignment_Four_Scene extends Scene_Component
 		})
 	  }
 
+
 	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
 	  const spidermanShape = {
 	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
 	  };
 
-	  // DANIEL - People
+     // People
 	  this.people = [];
+	  var changer = 5;
 	  const peopleTransforms = this.worldTransforms.getTransforms().people;
-	  for (let i=3; i<peopleTransforms.length; i+=14) {
-	  	this.people.push(new Person(peopleTransforms[i], this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
-	  }
-      let peopleArray = []; // to initialize collision-manager
-      for (let i=0; i<this.people.length; i++)
-	  {
-	 		var position_array = [], node_array = [];
-	 		this.people[i].get_array(position_array, node_array);
-	 		for(let j=0; j<position_array.length; j++)
-	 		{
-	 			peopleArray.push(
-	 			{	torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
-// 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
-//					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
- 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
- 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
-	 		}
+	  for (let i=4; i<peopleTransforms.length; i+=changer) {
+	  	this.people.push(new Person(peopleTransforms[i].times(Mat4.rotation(1.57,[0,1,0])), this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
+	  	changer = (changer == 5) ? 2 : 5;
 	  }
 
 	  // cars
 	  this.cars = [];
+	  //var changer = 3;
 	  const carTransforms = this.worldTransforms.getTransforms().cars;
-	  for (let i=0; i<carTransforms.length; i+=5) {
+	  for (let i=7; i<carTransforms.length - 5; i+=changer) {
 	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
+	  	changer = (changer == 3) ? 4 : 3;
 	  }
 	 var carArray = [];
 	 for (let i=0; i<this.cars.length; i++)
@@ -212,28 +204,24 @@ class Assignment_Four_Scene extends Scene_Component
 	  */
 	  
 	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", [], "torso", [], "car", null, coinShapes); 
+	  this.spiderman.setCollisionManager( this.collisionManager );
+
 
 	  // ============= end of static world generation
-
-	  // Josh todo: save this.collisionManager instance in Spiderman somehow. Maybe a setter for spiderman?
     }
     make_control_panel()
     { // Takes user input for button presses
-        this.key_triggered_button( "Move Forward", [ "i" ], () => this.movement_directions.forward = true, undefined,
+        this.key_triggered_button( "Move Forward", [ "w" ], () => this.movement_directions.forward = true, undefined,
         													                          () => this.movement_directions.forward = false );
-        this.key_triggered_button( "Move Left", [ "j" ], () => this.movement_directions.left = true, undefined,
+        this.key_triggered_button( "Move Left", [ "a" ], () => this.movement_directions.left = true, undefined,
         												                         () => this.movement_directions.left = false );
-        this.key_triggered_button( "Move Backward", [ "k" ], () => this.movement_directions.backward = true, undefined,
+        this.key_triggered_button( "Move Backward", [ "s" ], () => this.movement_directions.backward = true, undefined,
         													                           () => this.movement_directions.backward = false );
-        this.key_triggered_button( "Move Right", [ "l" ], () => this.movement_directions.right = true, undefined,
+        this.key_triggered_button( "Move Right", [ "d" ], () => this.movement_directions.right = true, undefined,
         												                          () => this.movement_directions.right = false );
-       	// JOSH - Toggle "map" view
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
-		// JOSH - Turn camera to Spiderman's forward direction
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
-		//JUSTIN - Allow object to jump
-		this.key_triggered_button( "Jump", [ "q" ], () => { this.spiderman.jump(); } );
-		//JUSTIN - Shoot Out Web
+		this.key_triggered_button( "Jump", [ " " ], () => { this.spiderman.jump(); } );
 		this.key_triggered_button( "Shoot Web", [ "x" ], () => {this.spiderman.change_web(); } );
     }
     display( graphics_state )
@@ -280,29 +268,30 @@ class Assignment_Four_Scene extends Scene_Component
 	  
      // Draw all people
      var peopleArray = [];
-     const peopleTranslateMatrix = Mat4.translation([0,0,Math.cos(t)*2]);
-     for (let i=0; i<this.people.length; i++)
+     const peopleTranslateMatrix = Mat4.translation([Math.cos(t)/3,0,0]);
+     for (let i=1; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
 	 		this.people[i].get_array(position_array, node_array);
 	 		for(let j=0; j<position_array.length; j++)
 	 		{
 	 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
-	 			peopleArray.push(
-	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
-//	 			    torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
-// 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
-//					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
-// 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
-// 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
 	 		}
+
+	 		peopleArray.push(
+	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		
-	 		// Can add a boolean here to determine if cars will move or not
-	 		this.people[i].move(peopleTranslateMatrix);
+	 		// Can add a boolean here to determine if person will move or not
+ 	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
+ 	 		if (this.collisionManager.tryMovePerson(tempHolder1))
+ 	 			this.people[i].move(tempHolder1);
+//			this.people[i].move(peopleTranslateMatrix);
 	 	}
 
      // Draw all cars
 	 var carArray = [];
+	 const carTranslateMatrix = Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]);
+	 const wheelRotationMatrix = Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]);
 	 for (let i=0; i<this.cars.length; i++)
 	 {
 		var position_array = [], node_array = [];
@@ -310,12 +299,18 @@ class Assignment_Four_Scene extends Scene_Component
 		for(let j=0; j<position_array.length; j++)
 		{
 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
-			carArray.push(
+		}
+
+		carArray.push(
 			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
-		}
-		//Try to move this car
-		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
+
+		// Can add a boolean here to determine if cars will move or not
+		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
+		if (this.collisionManager.tryMoveCar(tempHolder2))
+			this.cars[i].move(tempHolder2, wheelRotationMatrix);
+//		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
+
 	 }	 
 
 	 // For debugging: draw peoples' AABBs
@@ -334,14 +329,9 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
-	  const spidermanHeadPosMatrix = this.spiderman.model_transform.times(Mat4.translation([0,2,0])).times(Mat4.scale(1,1,1));
-
-	  this.spiderman.update();
+// 	  this.spiderman.update();
 	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
-	  // Create spiderman's AABB
-	  const spidermanAABB = AABB.generateAABBFromPoints(this.shapes.spiderman.positions, spidermanPosMatrix);
-	  //this.shapes.AABB.draw( graphics_state, spidermanAABB.getTransformMatrix(), this.materials.AABB);
 	  
 	  //JUSTIN - turn gravity on
 	  //this.spiderman.get_position();
@@ -379,7 +369,8 @@ class Assignment_Four_Scene extends Scene_Component
 			this.spiderman.change_contact(shouldChangeContact);
 
 			if (canMove) {
-				this.spiderman.keyboard_move(dirString);
+			  this.spiderman.setNextShape(nextSpidermanShape);
+			  this.spiderman.keyboard_move(dirString);
 			}
 			else {
 				//if hit boundary, highlight it
@@ -387,34 +378,33 @@ class Assignment_Four_Scene extends Scene_Component
 				if (boundaryTransform != null) {
 					this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
 				}
+        
 				//if hit coin, remove it and its AABB. Update coin counter display
 				const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
 				if (coinTransform != null) {
 					this.worldTransforms.removeCoinTransform(coinTransform);
 					this.collisionManager.removeCoinAABB(coinTransform);
-					/*
-					console.log(this.worldTransforms.getTransforms().coins.length);
-					this.collisionManager.removeCoinAABB(coinTransform);
-					console.log(this.collisionManager.AABBs.coins.length);
-					const AABBtrans = this.collisionManager.AABBs.coins.map(aabb => aabb.baseMatrix);
-					if (!arraysEqual(AABBtrans, this.worldTransforms.getTransforms().coins)) {
-						console.log('arrays not equal...');
-					}
-					*/
 					this.coinCounter.incrementCount();
 				}
-				/*
-				//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
-				const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
-				if (buildingTransform != null) {
-					this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
-				}
-				*/
-				//JOSH demo #2: how to use the function to check if camera is within a building
-				//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
+	
+			  if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
+					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
+					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
+			    this.spiderman.setNextShape(nextSpidermanShape);
+			    this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
+			  }
+			  /*
+			//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
+			const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
+			if (buildingTransform != null) {
+				this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
+			}
+			*/
+			//JOSH demo #2: how to use the function to check if camera is within a building
+			//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
 			}
 		 }
-	  }
+	 }
   }
 }
 
@@ -435,4 +425,44 @@ function arraysEqual(_arr1, _arr2) {
 
     return true;
 
+class Texture_Scroll_X extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
+}
+
+class Texture_Rotate extends Phong_Shader
+{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
+    {
+	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
+      return `
+	  uniform sampler2D texture;
+      void main()
+      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
+	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
+		  return;
+	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
+	  // Phong shading is not to be confused with the Phong Reflection Model.
+          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
+                                                                                      // Compute an initial (ambient) color:
+          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
+          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
+          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
+      }`;
+    }
 }

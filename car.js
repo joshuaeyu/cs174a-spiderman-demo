@@ -40,7 +40,8 @@ class Car{
   }
 
   move(car_matrix, wheel_matrix) {
-    this.car.position = this.car.position.times(car_matrix);
+    //this.car.position = this.car.position.times(car_matrix);
+    this.car.position = car_matrix;
     this.wheel1.position = this.wheel1.position.times(wheel_matrix);
     this.wheel2.position = this.wheel2.position.times(wheel_matrix);
     this.wheel3.position = this.wheel3.position.times(wheel_matrix);

@@ -42,8 +42,9 @@ class Person {
     this.torso.list_draw_compounded(position_array, Mat4.identity(), node_array);
   }
 
-  move(person_matrix,left_leg_matrix,right_leg_matrix) {
-    this.torso.position = person_matrix.times(this.torso.position);
+  move(person_matrix) {
+    //this.torso.position = person_matrix.times(this.torso.position);
+    this.torso.position = person_matrix;
     //this.left_upper_leg.position = this.left_upper_leg.position.times(left_leg_matrix);
     //this.right_upper_leg.position = this.right_upper_leg.position.times(right_leg_matrix);
   }
