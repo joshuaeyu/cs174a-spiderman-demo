@@ -92,7 +92,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // Initialize game
-	  const numCoins = 5;
+	  const numCoins = 15;
 	  this.coinCounter = new CoinCounter(numCoins);
 
 	  // generate world with inputted size
