@@ -56,7 +56,7 @@ class Spiderman
       case ("left"):     rotation_mult = 1; break;
       case ("right"):    rotation_mult = 3; break;
     }
-    let building_transform = this.collisionManager.findBuildingThatSpidermanHits( this.nextShape );
+    let building_transform = this.collisionManager.findBuildingThatSpidermanHits( this.nextShape, "body" );
     // GROUND MOVEMENT
     if ( building_transform === null && !this.isOnWall ) 
     {  
@@ -113,7 +113,7 @@ class Spiderman
       let should_fall = false;
       const nextTransform = this.simulate_keyboard_move("forward").times(Mat4.scale([.5,1,1]));
       const nextShape = { body: { positions: this.nextShape.body.positions, transform: nextTransform } };
-      if ( this.isOnWall && this.collisionManager.findBuildingThatSpidermanHits(nextShape) === null ) // If wall is no longer in front, fall
+      if ( this.isOnWall && this.collisionManager.findBuildingThatSpidermanHits(nextShape, "body") === null ) // If wall is no longer in front, fall
         should_fall = true;
 
       // Ground shenanigans 

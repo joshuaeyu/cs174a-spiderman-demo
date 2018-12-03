@@ -118,12 +118,6 @@ class Assignment_Four_Scene extends Scene_Component
 		})
 	  }
 
-
-	  //spiderman. its transform is copied from display(), crappy but we're changing it later so w/e
-	  const spidermanShape = {
-	  	body: { positions: this.shapes.spiderman.positions, transform: this.spiderman.model_transform.times(Mat4.scale([.5,1,1])) }
-	  };
-
      // People
 	  this.people = [];
 	  var changer = 5;
@@ -269,7 +263,7 @@ class Assignment_Four_Scene extends Scene_Component
      // Draw all people
      var peopleArray = [];
      const peopleTranslateMatrix = Mat4.translation([Math.cos(t)/3,0,0]);
-     for (let i=1; i<this.people.length; i++)
+     for (let i=0; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
 	 		this.people[i].get_array(position_array, node_array);
@@ -279,11 +273,12 @@ class Assignment_Four_Scene extends Scene_Component
 	 		}
 
 	 		peopleArray.push(
-	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
+	 			{	id:		i,
+	 				body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		
 	 		// Can add a boolean here to determine if person will move or not
  	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
- 	 		if (this.collisionManager.tryMovePerson(tempHolder1))
+ 	 		if (this.collisionManager.tryMovePerson(peopleArray[i], "body"))
  	 			this.people[i].move(tempHolder1);
 //			this.people[i].move(peopleTranslateMatrix);
 	 	}
@@ -302,12 +297,13 @@ class Assignment_Four_Scene extends Scene_Component
 		}
 
 		carArray.push(
-			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+			{	id:		i,
+				car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
 
 		// Can add a boolean here to determine if cars will move or not
 		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
-		if (this.collisionManager.tryMoveCar(tempHolder2))
+		if (this.collisionManager.tryMoveCar(carArray[i], "car"))
 			this.cars[i].move(tempHolder2, wheelRotationMatrix);
 //		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
 
@@ -387,8 +383,8 @@ class Assignment_Four_Scene extends Scene_Component
 					this.coinCounter.incrementCount();
 				}
 	
-			  if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
-					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
+			  if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape, "body") // Regular collisions
+					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape, "body")	// If spiderman hits a building
 					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
 			    this.spiderman.setNextShape(nextSpidermanShape);
 			    this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
@@ -406,63 +402,4 @@ class Assignment_Four_Scene extends Scene_Component
 		 }
 	 }
   }
-}
-
-function arraysEqual(_arr1, _arr2) {
-
-    if (!Array.isArray(_arr1) || ! Array.isArray(_arr2) || _arr1.length !== _arr2.length)
-      return false;
-
-    var arr1 = _arr1.concat().sort();
-    var arr2 = _arr2.concat().sort();
-
-    for (var i = 0; i < arr1.length; i++) {
-
-        if (arr1[i] !== arr2[i])
-            return false;
-
-    }
-
-    return true;
-
-class Texture_Scroll_X extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #6.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
-}
-
-class Texture_Rotate extends Phong_Shader
-{ fragment_glsl_code()           // ********* FRAGMENT SHADER *********
-    {
-	// TODO:  Modify the shader below (right now it's just the same fragment shader as Phong_Shader) for requirement #7.
-      return `
-	  uniform sampler2D texture;
-      void main()
-      { if( GOURAUD || COLOR_NORMALS )    // Do smooth "Phong" shading unless options like "Gouraud mode" are wanted instead.
-	      { gl_FragColor = VERTEX_COLOR;    // Otherwise, we already have final colors to smear (interpolate) across vertices.
-		  return;
-	      }                                 // If we get this far, calculate Smooth "Phong" Shading as opposed to Gouraud Shading.
-	  // Phong shading is not to be confused with the Phong Reflection Model.
-          vec4 tex_color = texture2D( texture, f_tex_coord );                         // Sample the texture image in the correct place.
-                                                                                      // Compute an initial (ambient) color:
-          if( USE_TEXTURE ) gl_FragColor = vec4( ( tex_color.xyz + shapeColor.xyz ) * ambient, shapeColor.w * tex_color.w );
-          else gl_FragColor = vec4( shapeColor.xyz * ambient, shapeColor.w );
-          gl_FragColor.xyz += phong_model_lights( N );                     // Compute the final color with contributions from lights.
-      }`;
-    }
 }
