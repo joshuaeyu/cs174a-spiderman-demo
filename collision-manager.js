@@ -213,6 +213,7 @@ class CollisionManager {
     if (!AABB.doAABBsNotIntersect(newCarAABB, spidermanAABB)) {
         return false;
     }
+    return true;
   }
 
   // returns true if person of the given ID won't collide with spiderman, other cars, or a person.
@@ -248,6 +249,7 @@ class CollisionManager {
     if (!AABB.doAABBsNotIntersect(newPersonAABB, spidermanAABB)) {
         return false;
     }
+    return true;
   }
 
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
