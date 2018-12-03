@@ -225,9 +225,10 @@ class Assignment_Four_Scene extends Scene_Component
 	 		for(let j=0; j<position_array.length; j++)
 	 		{
 	 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
-	 			peopleArray.push(
-	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		}
+
+	 		peopleArray.push(
+	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		
 	 		// Can add a boolean here to determine if person will move or not
  	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
@@ -247,10 +248,12 @@ class Assignment_Four_Scene extends Scene_Component
 		for(let j=0; j<position_array.length; j++)
 		{
 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
-			carArray.push(
+		}
+
+		carArray.push(
 			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
-		}
+
 		// Can add a boolean here to determine if cars will move or not
 		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
 		if (this.collisionManager.tryMoveCar(tempHolder2))
