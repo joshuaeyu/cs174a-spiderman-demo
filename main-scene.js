@@ -48,7 +48,8 @@ class Assignment_Four_Scene extends Scene_Component
       	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", true) }),
       	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", true) }),
       	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) ),
-      	coin: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1 ), { ambient: 0.8, specular: 1 } )
+      	coin: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1 ), { ambient: 0.8, specular: 1 } ),
+      	spider_design: context.get_instance( Phong_Shader ).material( Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/textures/spiderLogo.png", true)})
       }
 
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
@@ -59,9 +60,10 @@ class Assignment_Four_Scene extends Scene_Component
 	  				 go: new Audio("assets/sounds/go.wav"),
 	  				 gwg: new Audio("assets/sounds/go_web_go.wav"),
 	  				 shazam: new Audio("assets/sounds/shazam.wav"),
-	  				 uua: new Audio("assets/sounds/up_up_and_away.wav")};
+	  				 uua: new Audio("assets/sounds/up_up_and_away.wav"),
+	  				 coin: new Audio("assets/sounds/coin.wav")};
 	  				 
-	  this.strings = ["web","fly","go","gwg","shazam","uua"];
+	  this.strings = ["web","fly","go","gwg","shazam","uua","coin"];
 
 	  // JOSH - Spiderman object
 	  this.spiderman = new Spiderman( context.globals.graphics_state );
@@ -434,6 +436,7 @@ class Assignment_Four_Scene extends Scene_Component
 			if (coinTransform != null) {
 				this.worldTransforms.removeCoinTransform(coinTransform);
 				this.collisionManager.removeCoinAABB(coinTransform);
+				this.play_sound(this.strings[6]);
 				this.coinCounter.incrementCount();
 				let newTransform = this.worldTransforms.generateNewCoinTransform();
 				this.collisionManager.generateCoinAABB({ positions: this.shapes.coin.positions, transform: newTransform });
