@@ -272,7 +272,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  
      // Draw all people
      var peopleArray = [];
-     const peopleTranslateMatrix = Mat4.translation([Math.cos(t)/3,0,0]);
+     const peopleTranslateMatrix = Mat4.translation([0,0,-15*dt]);
      for (let i=0; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
@@ -287,9 +287,12 @@ class Assignment_Four_Scene extends Scene_Component
 	 				body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		
 	 		// Can add a boolean here to determine if person will move or not
- 	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
+ 	 		var tempHolder1 = this.people[i].torso.position.times(peopleTranslateMatrix);
  	 		if (this.collisionManager.tryMovePerson(peopleArray[i], "body"))
- 	 			this.people[i].move(tempHolder1);
+ 	 			{
+					if (this.people[i].move(tempHolder1) >= 100)
+						this.people[i].turn_around();
+ 	 			}
 //			this.people[i].move(peopleTranslateMatrix);
 	 	}
 
@@ -314,7 +317,11 @@ class Assignment_Four_Scene extends Scene_Component
 		// Can add a boolean here to determine if cars will move or not
 		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
 		if (this.collisionManager.tryMoveCar(carArray[i], "car"))
+		{
 			this.cars[i].move(tempHolder2, wheelRotationMatrix);
+// 			if (this.cars[i].move(tempHolder2, wheelRotationMatrix) >= 100)
+// 				this.cars[i].turn_around();
+		}
 //		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
 
 	 }	 

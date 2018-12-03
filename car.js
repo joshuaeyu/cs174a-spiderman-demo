@@ -33,6 +33,8 @@ class Car{
 	  this.car.add_child(this.right_light);
 	  this.car.add_child(this.left_back_light);
 	  this.car.add_child(this.right_back_light);
+
+	  this.distance_traveled = 0;
   }
 
   get_array(position_array, node_array) {
@@ -46,5 +48,13 @@ class Car{
     this.wheel2.position = this.wheel2.position.times(wheel_matrix);
     this.wheel3.position = this.wheel3.position.times(wheel_matrix);
     this.wheel4.position = this.wheel4.position.times(wheel_matrix);
+
+    this.distance_traveled++;
+    return this.distance_traveled;
+  }
+
+  turn_around() {
+  	this.car.position = this.car.position.times(Mat4.rotation(3.14,[0,1,0]));
+  	this.distance_traveled = 0;
   }
 }
