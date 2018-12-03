@@ -36,6 +36,8 @@ class Person {
 	  this.right_lower_arm.add_child(this.right_hand);
 	  this.left_lower_arm.add_child(this.left_hand);
 	  //this.torso.add_child(this.intersection_box);
+
+	  this.distance_traveled = 75;
   }
 
   get_array(position_array, node_array) {
@@ -47,5 +49,12 @@ class Person {
     this.torso.position = person_matrix;
     //this.left_upper_leg.position = this.left_upper_leg.position.times(left_leg_matrix);
     //this.right_upper_leg.position = this.right_upper_leg.position.times(right_leg_matrix);
+    this.distance_traveled++;
+    return this.distance_traveled;
+  }
+
+  turn_around() {
+  	this.torso.position = this.torso.position.times(Mat4.rotation(3.14, [0,1,0]));
+  	this.distance_traveled = 0;
   }
 }

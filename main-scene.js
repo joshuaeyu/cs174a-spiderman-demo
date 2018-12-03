@@ -4,7 +4,7 @@ class Assignment_Four_Scene extends Scene_Component
     { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
 
       const r = context.width/context.height;
-      console.log(r);
+      //console.log(r);
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
       const shapes = {
@@ -19,7 +19,8 @@ class Assignment_Four_Scene extends Scene_Component
       		AABB: 		new Cube(),
       		lamp: new Lamp(),
       		ball: new Subdivision_Sphere(4),
-      		arrow:	new Triangle()
+      		arrow:	new Triangle(),
+      		coin:		new Capped_Cylinder(10,10)
       }
       this.submit_shapes( context, shapes );
 
@@ -44,7 +45,8 @@ class Assignment_Four_Scene extends Scene_Component
       	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/ground.png", true) }),
       	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", true) }),
       	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", true) }),
-      	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) )
+      	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) ),
+      	coin: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1 ), { ambient: 0.8, specular: 1 } )
       }
 
 	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
@@ -87,8 +89,12 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
+	  // Initialize game
+	  const numCoins = 15;
+	  this.coinCounter = new CoinCounter(numCoins);
+
 	  // generate world with inputted size
-	  this.worldTransforms = new WorldTransforms(75,100,50,8);
+	  this.worldTransforms = new WorldTransforms(75,50,50,8,numCoins);
 
 	  // now format all world objects for collision manager.
 
@@ -134,7 +140,7 @@ class Assignment_Four_Scene extends Scene_Component
 		})
 	  }
 
-	  // DANIEL - Cars and People
+     // People
 	  this.people = [];
 	  var changer = 5;
 	  const peopleTransforms = this.worldTransforms.getTransforms().people;
@@ -143,6 +149,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  	changer = (changer == 5) ? 2 : 5;
 	  }
 
+	  // cars
 	  this.cars = [];
 	  //var changer = 3;
 	  const carTransforms = this.worldTransforms.getTransforms().cars;
@@ -150,6 +157,29 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
 	  	changer = (changer == 3) ? 4 : 3;
 	  }
+	 var carArray = [];
+	 for (let i=0; i<this.cars.length; i++)
+	 {
+		var position_array = [], node_array = [];
+		this.cars[i].get_array(position_array, node_array);
+		for(let j=0; j<position_array.length; j++)
+		{
+			carArray.push(
+			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
+		}
+	 }	 
+
+	  // coins
+  	  let coinShapes = [];
+	  const coinTransforms = this.worldTransforms.getTransforms().coins;
+	  for (let i=0; i<coinTransforms.length; i++) {
+	  	  const coinTransform = coinTransforms[i];
+		  coinShapes.push({
+		  	positions: this.shapes.coin.positions,
+		  	transform: coinTransform
+		  });
+	  };
 
 	  // TODO: lampposts, cars, people
 	  /*
@@ -189,8 +219,9 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", [], "torso", [], "car", null);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", [], "torso", [], "car", null, coinShapes); 
 	  this.spiderman.setCollisionManager( this.collisionManager );
+
 
 	  // ============= end of static world generation
     }
@@ -244,11 +275,27 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.shapes.building.draw( graphics_state, transform, material );
 	  	//this.shapes.AABB.draw( graphics_state, transform, this.materials.AABB); //Uncomment to see building AABBs in red
 	  }
+
+	  // draw all coins
+	  const coinTransforms = allWorldTransforms.coins;
+	  for (let i=0; i<coinTransforms.length; i++) {
+	  	const transform = coinTransforms[i]
+			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
+			.times(Mat4.translation([0,Math.cos(2*t)/4,0]));
+	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
+	  }
+ 	 /*
+ 	 // For debugging: draw coins' AABBs
+	 const coinsAABBs = this.collisionManager.AABBs.coins;
+	 for (let i=0; i<coinsAABBs.length; i++) {
+	 	this.shapes.AABB.draw( graphics_state, coinsAABBs[i].getTransformMatrix(), this.materials.AABB);
+	 }
+	 */
 	  
      // Draw all people
      var peopleArray = [];
-     const peopleTranslateMatrix = Mat4.translation([Math.cos(t)/3,0,0]);
-     for (let i=1; i<this.people.length; i++)
+     const peopleTranslateMatrix = Mat4.translation([0,0,-15*dt]);
+     for (let i=0; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
 	 		this.people[i].get_array(position_array, node_array);
@@ -258,12 +305,16 @@ class Assignment_Four_Scene extends Scene_Component
 	 		}
 
 	 		peopleArray.push(
-	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
+	 			{	id:		i,
+	 				body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
 	 		
 	 		// Can add a boolean here to determine if person will move or not
- 	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
- 	 		if (this.collisionManager.tryMovePerson(tempHolder1))
- 	 			this.people[i].move(tempHolder1);
+ 	 		var tempHolder1 = this.people[i].torso.position.times(peopleTranslateMatrix);
+ 	 		if (this.collisionManager.tryMovePerson(peopleArray[i], "body"))
+ 	 			{
+					if (this.people[i].move(tempHolder1) >= 100)
+						this.people[i].turn_around();
+ 	 			}
 //			this.people[i].move(peopleTranslateMatrix);
 	 	}
 
@@ -281,35 +332,28 @@ class Assignment_Four_Scene extends Scene_Component
 		}
 
 		carArray.push(
-			{	car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
+			{	id:		i,
+				car:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
 
 		// Can add a boolean here to determine if cars will move or not
 		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
-		if (this.collisionManager.tryMoveCar(tempHolder2))
+		if (this.collisionManager.tryMoveCar(carArray[i], "car"))
+		{
 			this.cars[i].move(tempHolder2, wheelRotationMatrix);
+// 			if (this.cars[i].move(tempHolder2, wheelRotationMatrix) >= 100)
+// 				this.cars[i].turn_around();
+		}
 //		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
-	 }	 
-	 
-	  // Limit # of AABB updates
-	  var count = 0;
-	  if (count == 0)	
-	  {
-		this.collisionManager.regenerateCarsAABBs(carArray);
-		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
-	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
-	 	 count++;
-	  }
-	  else if (count == 10)
-	  	count = 0;
-	  else
-	  	count++;
 
+	 }	 
+	 /*
 	 // For debugging: draw peoples' AABBs
 	 const peopleAABBs = this.collisionManager.AABBs.people;
 	 for (let i=0; i<peopleAABBs.length; i++) {
 	 	this.shapes.AABB.draw( graphics_state, peopleAABBs[i].getTransformMatrix(), this.materials.AABB);
 	 }
+	 */
 
 	  // GLADYS - draw justin's lamppost
 	  const lampTransforms = allWorldTransforms.lampposts;
@@ -329,9 +373,10 @@ class Assignment_Four_Scene extends Scene_Component
 		  let check_collision = {body: {positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix}};
 		  let inContact = !this.collisionManager.tryMoveSpiderman(check_collision);
 		  if (!this.collisionManager.getBoundaryThatSpidermanJustHit()) 
-		  	this.spiderman.change_contact(inContact);
+		  	this.spiderman.change_contact(inContact, "body");
 		  else	
 		  	this.spiderman.change_web();
+		  this.spiderman.change_contact(!this.collisionManager.tryMoveSpiderman(check_collision, "body"));
 		}
 	  
       // Update Spiderman's transform and draw
@@ -345,7 +390,25 @@ class Assignment_Four_Scene extends Scene_Component
 	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(-4,6,6).times(scale))), this.materials.pure_red );
       }
 
+	  // Update AABB of all dynamic objects (except coins since AABB doesn't need to change much for it)
+
+	  this.collisionManager.regenerateSpidermanAABB({ body: { positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix } }, "body");
+	  // Limit # of AABB updates
+	  var count = 0;
+	  if (count == 0)	
+	  {
+		this.collisionManager.regenerateCarsAABBs(carArray, "car");
+		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
+	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
+	 	 count++;
+	  }
+	  else if (count == 10)
+	  	count = 0;
+	  else
+	  	count++;
+
 	  // Check input and move Spiderman for the next frame
+	  
 	  for (let dirString in this.movement_directions) {
 		  if (this.movement_directions[dirString]) {
 		  	// Can SM move in the direction desired input by the keyboard?
@@ -353,31 +416,32 @@ class Assignment_Four_Scene extends Scene_Component
 			const nextSpidermanShape = {
 				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
 			};
-			const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape);
+			
+        const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape, "body");
 			
 		    // If hit boundary, highlight it
 		    const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
 		    if (boundaryTransform != null) {
 		  	  this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
 		    }
+        
+        //if hit coin, remove it and its AABB. Update coin counter display
+				const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
+				if (coinTransform != null) {
+					this.worldTransforms.removeCoinTransform(coinTransform);
+					this.collisionManager.removeCoinAABB(coinTransform);
+					this.coinCounter.incrementCount();
+				}
+        
 		    // Move SM appropriately
 		    else if (canMove // Regular collisions
-				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape) ) // Make an exception when SM hits a building
+				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape, "body") ) // Make an exception when SM hits a building
 		    {
 			  this.spiderman.setNextShape(nextSpidermanShape);
 			  this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building
 		    }
-			  /*
-			//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
-			const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
-			if (buildingTransform != null) {
-				this.shapes.building.draw( graphics_state, buildingTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.red);
-			}
-			*/
-			//JOSH demo #2: how to use the function to check if camera is within a building
-			//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
-// 			}
-		 }
+        
+		}
 	 }
-  }
+ }
 }

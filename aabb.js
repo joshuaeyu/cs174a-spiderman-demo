@@ -99,6 +99,8 @@ class AABB {
 
     let minx, maxx, miny, maxy, minz, maxz;
     for (let subshapeStr in shapes) {
+      if (subshapeStr === "id") continue;
+      
       const currShape = shapes[subshapeStr];
       let subshapeGlobalPoints = currShape.positions.map((p) => currShape.transform.times(p.to4(true)));
 
