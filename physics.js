@@ -11,6 +11,7 @@ class Physics
 						  z: spidermanUnscaledPosMat.times(Vec.of(0,0,0,1))[2] };
 		this.permanent_ground = 1;
 		//this.pt_of_rotation = {x: 0, y: 0, z: 0 };
+		this.default_velocity = 10;
 		this.velocity_xz = 10;
 		this.velocity_y = 0;
 		this.up_velocity = 2; //for when he is climbing up walls
@@ -47,6 +48,7 @@ class Physics
 		}
 		//update spiderman_Posvec and spiderman_Posmat from position
 		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,this.position.y - previous_pos_y,0]));
+		this.update_pos( this.spiderman_PosMat );
 		return this.spiderman_PosMat;
 	}
 	//Should be fine
@@ -55,30 +57,49 @@ class Physics
 	{
 		if (this.position.y < this.permanent_ground || this.grounded == true){
 			//change y-velocity and then let gravity take care of the rest
-			this.velocity_y = 30.0;
+			this.velocity_y = 20.0;
 			this.grounded = false;
 		}
 	}
 	//when the web is shoot, just pendulum motion
 	pendulum(spidermanUnscaledPosMat)
 	{
-		var length = 1;
+		var length = 1.3;
 		this.velocity_y = 0;
 		var previous_y = length * Math.sin(this.rotation);
+		var previous_rot = this.rotation;
 		this.rotation += this.ang_vel * (this.gs.animation_delta_time / 1000) + (0.5 * this.ang_acc * (this.gs.animation_delta_time / 1000) * (this.gs.animation_delta_time / 1000));
 		var moment_of_inertia = this.mass * length * length; //length is just an arbitary number at this point sqrt
 		//calculate  net force on object
-		var torque = this.mass * -this.acc_grav * Math.cos(this.rotation) * length;
+		var torque = this.mass * -this.acc_grav * Math.cos(this.rotation) * length/4;
 		//calculate acceleration
 		var ang_acc = torque/moment_of_inertia;
 		//calculate velocity
 		this.ang_vel += 0.5 * (ang_acc + this.ang_acc) * (this.gs.animation_delta_time / 1000);
+
+		//calculate linear velocity - 4 regimes;
+		var up_or_down = this.rotation - previous_rot;
+		if (up_or_down < 0 && this.rotation > Math.PI/2){
+			this.velocity_xz = -Math.abs(this.ang_vel * length * Math.sin(Math.PI/2 - this.rotation));
+			this.velocity_y = -Math.abs(this.ang_vel * length * Math.cos(Math.PI/2 - this.rotation));
+		}
+		if (up_or_down > 0 && this.rotation > Math.PI/2){
+			this.velocity_xz = Math.abs(this.ang_vel * length * Math.sin(Math.PI/2 - this.rotation));
+			this.velocity_y = Math.abs(this.ang_vel * length * Math.cos(Math.PI/2 - this.rotation));	
+		}
+		if (up_or_down < 0 && this.rotation < Math.PI/2){
+			this.velocity_xz = Math.abs(this.ang_vel * length * Math.sin(Math.PI/2 - this.rotation));
+			this.velocity_y = -Math.abs(this.ang_vel * length * Math.cos(Math.PI/2 - this.rotation));
+		}
+		if (up_or_down > 0 && this.rotation < Math.PI/2){
+			this.velocity_xz = Math.abs(this.ang_vel * length * Math.sin(Math.PI/2 - this.rotation));
+			this.velocity_y = -Math.abs(this.ang_vel * length * Math.cos(Math.PI/2 - this.rotation));
+		}
+
 		this.ang_acc = ang_acc;
 		//calculate position
 		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,length * Math.sin(this.rotation) - previous_y, length * -Math.cos(this.rotation)]));
-		console.log( (length * Math.sin(this.rotation)) + " " + (length * -Math.cos(this.rotation)));
 		this.update_pos(this.spiderman_PosMat);
-		console.log (this.position.y + " " + this.position.x  );
 		//return position
 		return this.spiderman_PosMat;
 	}
@@ -87,5 +108,10 @@ class Physics
 		this.rotation = -0.0996686525; //arctan(10/100) 10 is units in xz plane 100 is units in y axis
 		this.ang_vel = 0;
 		this.ang_acc = 0;
+	}
+	fall_web(){
+		this.spiderman_PosMat = this.spiderman_PosMat.times(Mat4.translation([0,0,-this.velocity_xz * (this.gs.animation_delta_time / 1000) ]));
+		this.update_pos(this.spiderman_PosMat);
+		return this.spiderman_PosMat;
 	}
 }
