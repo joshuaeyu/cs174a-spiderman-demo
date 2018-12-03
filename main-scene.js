@@ -20,7 +20,8 @@ class Assignment_Four_Scene extends Scene_Component
       		lamp: new Lamp(),
       		ball: new Subdivision_Sphere(4),
       		arrow:	new Triangle(),
-      		coin:		new Capped_Cylinder(10,10)
+      		coin:		new Capped_Cylinder(10,10),
+      		web: 		new Capped_Cylinder(20,20)
       }
       this.submit_shapes( context, shapes );
 
@@ -29,6 +30,7 @@ class Assignment_Four_Scene extends Scene_Component
       	gray:  context.get_instance( Phong_Shader ).material( Color.of( 0.86,0.86,0.86, 1) ),	// Color: Gainsboro
       	silver:context.get_instance( Phong_Shader ).material( Color.of( 0.74,0.74,0.74, 1) ),	// Color: Silver
       	white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1) ),
+      	pure_white: context.get_instance( Phong_Shader ).material( Color.of( 1,1,1,1), {ambient: 1} ),
       	light: context.get_instance( Phong_Shader ).material( Color.of( 1,1,0,1)),
       	black: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1) ),
       	yellow:context.get_instance( Phong_Shader ).material( Color.of (1,1,0,1) ),
@@ -90,7 +92,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // Initialize game
-	  const numCoins = 15;
+	  const numCoins = 5;
 	  this.coinCounter = new CoinCounter(numCoins);
 
 	  // generate world with inputted size
@@ -371,7 +373,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  if (!this.spiderman.contact)
 		if (this.spiderman.webbed) {
 		  let check_collision = {body: {positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix}};
-		  let inContact = !this.collisionManager.tryMoveSpiderman(check_collision);
+		  let inContact = !this.collisionManager.tryMoveSpiderman(check_collision, "body");
 		  if (!this.collisionManager.getBoundaryThatSpidermanJustHit()) 
 		  	this.spiderman.change_contact(inContact, "body");
 		  else	
@@ -382,6 +384,8 @@ class Assignment_Four_Scene extends Scene_Component
       // Update Spiderman's transform and draw
 	  if (!this.spiderman.camera.inBirdsEye) {
 	  	this.spiderman.physics_update();
+	  	if (this.spiderman.webbed)
+	  		this.shapes.web.draw(graphics_state, spidermanPosMatrix.times(Mat4.translation([0,100,0])).times(Mat4.scale([0.1,100,0.1])),this.materials.pure_white)
 	  	this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix, this.materials.tan );
 	  }
 	  else {
