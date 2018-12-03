@@ -231,10 +231,10 @@ class CollisionManager {
   }
 
   tryMovePerson(personShape) {
-    //todo
+    return true;
   }
 
   tryMoveCar(carShape) {
-    //todo
+    return true;
   }
 }
