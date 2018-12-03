@@ -51,7 +51,7 @@ class WorldTransforms {
     const numCellsBetweenPeople = 1; //car uses same one
 
     // coin generation parameters
-    const coinOffset = 3;
+    const coinOffset = 5;
     const coinMinHeight = 1.5;
     const coinMaxHeight = 1.5;
     const assumedLampSize = 3;
@@ -161,12 +161,24 @@ class WorldTransforms {
       
       const transform = Mat4.identity()
         .times(Mat4.translation([cellX*cellLength+finalPosX+baseCoord,0,cellY*cellLength+finalPosY+baseCoord])
-        .times(Mat4.translation([0,Math.random()*(coinMaxHeight-coinMinHeight)+coinMinHeight,0])));
+        .times(Mat4.translation([0,Math.random()*(coinMaxHeight-coinMinHeight)+coinMinHeight,0])))
+        .times(Mat4.scale([0.8,1,1]));
       this.transforms.coins.push(transform);
     }
   }
   getTransforms() {
     return this.transforms;
+  }
+  removeCoinTransform(transform) {
+    const index = this.transforms.coins.findIndex(function(t) {
+      return t.equals(transform);
+    });
+    if (index > -1) {
+      this.transforms.coins.splice(index, 1);
+    }
+    else {
+      console.log("error: world-transforms called on transform that shouldnt exist");
+    }
   }
 }
 

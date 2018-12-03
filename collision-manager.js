@@ -55,8 +55,10 @@ class CollisionManager {
       building: null,
       lamppost: null,
       person: null,
-      car: null
+      car: null,
+      coin: null
     }
+    this.coinsTransformToAABB = {};
 
     //Generate and save all AABBs
     this.AABBs = {};
@@ -132,7 +134,9 @@ class CollisionManager {
       const currShape = coinsShapes[i];
       const points = currShape.positions;
       const transform = currShape.transform;
-      this.AABBs.coins.push(AABB.generateAABBFromPoints(points, transform));
+      const coinAABB = AABB.generateAABBFromPoints(points, transform);
+      this.AABBs.coins.push(coinAABB);
+      this.coinsTransformToAABB[transform] = coinAABB;
     }
   }
 
@@ -293,11 +297,14 @@ class CollisionManager {
 
   // removes the coin AABB with baseMatrix == the given transform
   removeCoinAABB(transform) {
-    const allCoinTransforms = this.AABBs.coins.map(aabb => aabb.baseMatrix);
-    const index = allCoinTransforms.indexOf(transform, 1);
+    const index = this.AABBs.coins.findIndex(function(aabb) {
+      return aabb.baseMatrix.equals(transform);
+    });
     if (index > -1) {
-      // guaranteed that item shares same index in both AABB & transform arrays
       this.AABBs.coins.splice(index, 1);
+    }
+    else {
+      console.log("Error in collision-manager: coin AABB map inconsistent with transforms");
     }
   }
 

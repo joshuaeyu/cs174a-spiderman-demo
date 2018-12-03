@@ -267,10 +267,9 @@ class Assignment_Four_Scene extends Scene_Component
 	  // draw all coins
 	  const coinTransforms = allWorldTransforms.coins;
 	  for (let i=0; i<coinTransforms.length; i++) {
-	  	const transform = coinTransforms[i]
-	  		.times(Mat4.scale([0.8,1,1]))
-			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
-			.times(Mat4.translation([0,Math.cos(t)/4,0]));
+	  	const transform = coinTransforms[i];
+			//.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
+			//.times(Mat4.translation([0,Math.cos(t)/4,0]));
 	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
 	  }
  	 // For debugging: draw coins' AABBs
@@ -391,10 +390,17 @@ class Assignment_Four_Scene extends Scene_Component
 				//if hit coin, remove it and its AABB. Update coin counter display
 				const coinTransform = this.collisionManager.getCoinThatSpidermanJustHit();
 				if (coinTransform != null) {
-					coinTransforms.splice(coinTransforms.indexOf(coinTransform, 1), 1);
+					this.worldTransforms.removeCoinTransform(coinTransform);
+					this.collisionManager.removeCoinAABB(coinTransform);
+					/*
 					console.log(this.worldTransforms.getTransforms().coins.length);
 					this.collisionManager.removeCoinAABB(coinTransform);
 					console.log(this.collisionManager.AABBs.coins.length);
+					const AABBtrans = this.collisionManager.AABBs.coins.map(aabb => aabb.baseMatrix);
+					if (!arraysEqual(AABBtrans, this.worldTransforms.getTransforms().coins)) {
+						console.log('arrays not equal...');
+					}
+					*/
 					this.coinCounter.incrementCount();
 				}
 				/*
@@ -410,4 +416,23 @@ class Assignment_Four_Scene extends Scene_Component
 		 }
 	  }
   }
+}
+
+function arraysEqual(_arr1, _arr2) {
+
+    if (!Array.isArray(_arr1) || ! Array.isArray(_arr2) || _arr1.length !== _arr2.length)
+      return false;
+
+    var arr1 = _arr1.concat().sort();
+    var arr2 = _arr2.concat().sort();
+
+    for (var i = 0; i < arr1.length; i++) {
+
+        if (arr1[i] !== arr2[i])
+            return false;
+
+    }
+
+    return true;
+
 }
