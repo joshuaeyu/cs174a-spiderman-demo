@@ -114,30 +114,19 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // DANIEL - Cars and People
 	  this.people = [];
+	  var changer = 5;
 	  const peopleTransforms = this.worldTransforms.getTransforms().people;
-	  for (let i=3; i<peopleTransforms.length; i+=14) {
-	  	this.people.push(new Person(peopleTransforms[i], this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
-	  }
-      let peopleArray = []; // to initialize collision-manager
-      for (let i=0; i<this.people.length; i++)
-	  {
-	 		var position_array = [], node_array = [];
-	 		this.people[i].get_array(position_array, node_array);
-	 		for(let j=0; j<position_array.length; j++)
-	 		{
-	 			peopleArray.push(
-	 			{	torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
-// 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
-//					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
- 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
- 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
-	 		}
+	  for (let i=4; i<peopleTransforms.length; i+=changer) {
+	  	this.people.push(new Person(peopleTransforms[i].times(Mat4.rotation(1.57,[0,1,0])), this.shapes.body, this.shapes.sphere, this.materials.green, this.materials.white, this.materials.black, this.materials.tan));
+	  	changer = (changer == 5) ? 2 : 5;
 	  }
 
 	  this.cars = [];
+	  //var changer = 3;
 	  const carTransforms = this.worldTransforms.getTransforms().cars;
-	  for (let i=0; i<carTransforms.length; i+=5) {
+	  for (let i=7; i<carTransforms.length - 5; i+=changer) {
 	  	this.cars.push(new Car(carTransforms[i], this.shapes.body, this.shapes.wheels, this.materials.blue, this.materials.black, this.materials.white, this.materials.yellow, this.materials.red));
+	  	changer = (changer == 3) ? 4 : 3;
 	  }
 
 	  // TODO: lampposts, cars, people
@@ -178,7 +167,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", [], "body?", null);
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", [], "torso", [], "car", null);
 	  this.spiderman.setCollisionManager( this.collisionManager );
 
 	  // ============= end of static world generation
@@ -228,8 +217,8 @@ class Assignment_Four_Scene extends Scene_Component
 	  
      // Draw all people
      var peopleArray = [];
-     const peopleTranslateMatrix = Mat4.translation([0,0,Math.cos(t)*2]);
-     for (let i=0; i<this.people.length; i++)
+     const peopleTranslateMatrix = Mat4.translation([Math.cos(t)/3,0,0]);
+     for (let i=1; i<this.people.length; i++)
 	 	{
 	 		var position_array = [], node_array = [];
 	 		this.people[i].get_array(position_array, node_array);
@@ -238,19 +227,19 @@ class Assignment_Four_Scene extends Scene_Component
 	 			node_array[j].shape.draw( graphics_state, position_array[j], node_array[j].color);
 	 			peopleArray.push(
 	 			{	body:   { positions: this.shapes.body.positions,    transform: position_array[0].times(Mat4.translation([0,-1,0]).times(Mat4.scale([1.25,3.5,3.3]))) } })
-//	 			    torso:	{ positions: node_array[0].shape.positions, transform: position_array[0] },
-// 					head:	{ positions: node_array[2].shape.positions, transform: position_array[2] },
-//					hip:    { positions: node_array[3].shape.positions, transform: position_array[3] },
-// 					r_shin: { positions: node_array[5].shape.positions, transform: position_array[5] },
-// 					l_shin: { positions: node_array[8].shape.positions, transform: position_array[8] } })
 	 		}
 	 		
-	 		// Can add a boolean here to determine if cars will move or not
-	 		this.people[i].move(peopleTranslateMatrix);
+	 		// Can add a boolean here to determine if person will move or not
+ 	 		var tempHolder1 = peopleTranslateMatrix.times(this.people[i].torso.position);
+ 	 		if (this.collisionManager.tryMovePerson(tempHolder1))
+ 	 			this.people[i].move(tempHolder1);
+//			this.people[i].move(peopleTranslateMatrix);
 	 	}
 
      // Draw all cars
 	 var carArray = [];
+	 const carTranslateMatrix = Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]);
+	 const wheelRotationMatrix = Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]);
 	 for (let i=0; i<this.cars.length; i++)
 	 {
 		var position_array = [], node_array = [];
@@ -263,7 +252,10 @@ class Assignment_Four_Scene extends Scene_Component
 				hood:	{ positions: node_array[1].shape.positions, transform: position_array[1] } })
 		}
 		// Can add a boolean here to determine if cars will move or not
-		this.cars[i].move(Mat4.translation([0,0,Math.cos(2*(t%(2*Math.PI)))/5]), Mat4.rotation(Math.cos(2*(t%(2*Math.PI)))/10,[0,0,1]));
+		var tempHolder2 = this.cars[i].car.position.times(carTranslateMatrix);
+		if (this.collisionManager.tryMoveCar(tempHolder2))
+			this.cars[i].move(tempHolder2, wheelRotationMatrix);
+//		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
 	 }	 
 	 
 	  // Limit # of AABB updates
