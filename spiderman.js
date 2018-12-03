@@ -16,13 +16,12 @@ class Spiderman
                            gs: graphics_state } );
 	this.contact = false;
 	this.webbed = false; 
-    Object.defineProperty( this, 'VELOCITY', { value: 15, writable: false } ); // Adjustable
   }
   simulate_keyboard_move( direction )
   {
     // Gladys - exactly Josh's keyboard_move() except it doesn't change Spiderman. Instead, returns Spiderman's new would-be position.
     // Used for predicting AABB collisions
-    let distance = this.physics.velocity_xz * this.gs.animation_delta_time / 1000; //use velocity derived from physics class
+    let distance = this.physics.default_velocity * this.gs.animation_delta_time / 1000; //use velocity derived from physics class
     let rotation_mult = 0;
     switch ( direction )
     {
@@ -47,7 +46,7 @@ class Spiderman
   }
   keyboard_move( direction )
   {
-    let distance = this.physics.velocity_xz * this.gs.animation_delta_time / 1000; 
+    let distance = this.physics.default_velocity * this.gs.animation_delta_time / 1000; 
     let rotation_mult = 0;
     switch ( direction )
     {
@@ -58,7 +57,7 @@ class Spiderman
     }
     let building_transform = this.collisionManager.findBuildingThatSpidermanHits( this.nextShape );
     // GROUND MOVEMENT
-    if ( building_transform === null && !this.isOnWall ) 
+    if ( building_transform === null && !this.contact ) 
     {  
       // Calculate Spiderman movement (translation) vector according to input direction and current camera orientation
       let camera_xz_orientation = this.camera.locals.spidermanToCamera_Vec.mult_pairs( Vec.of(-1,0,-1) ).normalized();  // Unit vector, relative to Spiderman's current orientation
@@ -79,14 +78,14 @@ class Spiderman
       let spiderpos = this.model_transform.times(Vec.of(0,0,0,1)).to3();
 
       // If attaching to new wall, update local building transform
-      if (!this.isOnWall) 
+      if (!this.contact) 
         this.building_transform = building_transform;        
       
       this.spidermanToBuilding_Vec = this.building_transform.times(Vec.of(0,0,0,1)).to3().minus(spiderpos);
       let x = this.spidermanToBuilding_Vec[0], z = this.spidermanToBuilding_Vec[2];
       
       // If attaching to new wall, determine which side of building
-      if (!this.isOnWall) { 
+      if (!this.contact) { 
         if ( z > Math.abs(x) )        // Spiderman is on the NORTH wall of the building
           this.spidermanToBuildingCardinal_Vec = dirs.SOUTH;
         else if ( z < -Math.abs(x) )  // Spiderman is on the SOUTH wall of the building
@@ -95,7 +94,7 @@ class Spiderman
           this.spidermanToBuildingCardinal_Vec = dirs.WEST;
         else if ( x > Math.abs(z) )   // Spiderman is on the WEST wall of the building
           this.spidermanToBuildingCardinal_Vec = dirs.EAST;
-        this.isOnWall = true;
+        this.change_contact(true);
       }
 
       // Rotate Spiderman to face wall
@@ -110,23 +109,16 @@ class Spiderman
       spiderpos = this.model_transform.times(Vec.of(0,0,0,1)).to3();
       let height = spiderpos[1],
           ground = 1; // Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]; 
-      let should_fall = false;
       const nextTransform = this.simulate_keyboard_move("forward").times(Mat4.scale([.5,1,1]));
       const nextShape = { body: { positions: this.nextShape.body.positions, transform: nextTransform } };
-      if ( this.isOnWall && this.collisionManager.findBuildingThatSpidermanHits(nextShape) === null ) // If wall is no longer in front, fall
-        should_fall = true;
+      if ( this.contact && this.collisionManager.findBuildingThatSpidermanHits(nextShape) === null ) // If wall is no longer in front, fall
+        this.change_contact(false);
 
-      // Ground shenanigans 
-      if ( height < ground || should_fall ) {
-        this.model_transform = this.model_transform.times( Mat4.translation([0,ground-height+0.01,0]) );
-        this.isOnWall = false;
-      }
-
-	  // Update camera
-  	  this.camera.translate( this.model_transform );
-	  //update physical position
-	  this.physics.update_pos( this.model_transform );
   	}
+    // Update camera
+    this.camera.translate( this.model_transform );
+    //update physical position
+    this.physics.update_pos( this.model_transform );
   }
   rotate( current_orientation, desired_orientation )
   {
@@ -153,9 +145,9 @@ class Spiderman
   jump() { this.physics.jump(); };
 //----------------------------------------------------------------------------------//  
   //update/gravity
-  update() {
+  physics_update() {
 	if (!this.webbed && !this.contact){ //if neither in contact or spider web out
-		this.model_transform = this.physics.gravity();
+  		this.model_transform = this.physics.gravity();
 		this.physics.reset_angular();
 	}
 	if (this.webbed && !this.contact){ //if web is out and he is not in contact with anything
@@ -166,19 +158,31 @@ class Spiderman
 			this.webbed = false; //forces web back and stop pendulum when at ground
 		}
 	} 
+	if (!this.webbed & this.fall_from_web){
+		this.model_transform = this.physics.fall_web();
+		this.model_transform = this.physics.gravity();
+		this.physics.reset_angular();
+		if (this.physics.position.y <= 1.01){this.fall_from_web = false;}
+	}
 	this.camera.translate(this.model_transform); 
   }
   
   change_contact(bool) {
   	this.contact = bool;
+  	if (this.prev_contact != this.contact) {
+  		this.webbed = false;
+  		this.prev_contact = this.contact;
+  	}
   }
   change_web() {
 	  if (this.webbed){
 		this.webbed = false;
+		if (this.physics.position.y > 1) 
+		  this.fall_from_web = true;
 	  }
-	  else{
+	  else
 		  this.webbed = true;
-	  }
+	  
   }
 //----------------------------------------------------------------------------------// 
 

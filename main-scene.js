@@ -4,6 +4,7 @@ class Assignment_Four_Scene extends Scene_Component
     { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
 
       const r = context.width/context.height;
+      console.log(r);
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
       const shapes = {
@@ -17,7 +18,8 @@ class Assignment_Four_Scene extends Scene_Component
       		spiderman:  new Cube(),
       		AABB: 		new Cube(),
       		lamp: new Lamp(),
-      		ball: new Subdivision_Sphere(4)
+      		ball: new Subdivision_Sphere(4),
+      		arrow:	new Triangle()
       }
       this.submit_shapes( context, shapes );
 
@@ -30,6 +32,7 @@ class Assignment_Four_Scene extends Scene_Component
       	black: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1) ),
       	yellow:context.get_instance( Phong_Shader ).material( Color.of (1,1,0,1) ),
       	red:   context.get_instance( Phong_Shader ).material( Color.of (1,0.2,0.2,1) ),
+      	pure_red: context.get_instance( Phong_Shader ).material( Color.of (1,0,0,1), {ambient: 1, specularity: 0} ),
       	blue:  context.get_instance( Phong_Shader ).material( Color.of (0.2,0.6,0.8,1) ),
       	green: context.get_instance( Phong_Shader ).material( Color.of (0.18,0.55,0.34,1) ),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.25) ),
@@ -57,8 +60,16 @@ class Assignment_Four_Scene extends Scene_Component
 	  // JOSH - Pointer capture and mouse tracking
 	  document.getElementById("canvas1").addEventListener( "click", () => {document.getElementById("canvas1").requestPointerLock();} );	// Click inside canvas to capture cursor
 	  document.body.addEventListener( "mousemove", (m) => {
-	  	if(document.pointerLockElement === document.getElementById("canvas1"))
-	  		this.spiderman.camera_swivel( m ); } );
+	  	if (document.pointerLockElement === document.getElementById("canvas1"))
+	  	  this.spiderman.camera_swivel( m ); } );
+	  document.body.addEventListener( "mousedown", () => {
+	  	if (document.pointerLockElement === document.getElementById("canvas1"))
+	  	  this.spiderman.change_web();
+	  })
+	  document.body.addEventListener( "mouseup", () => {
+	  	if (document.pointerLockElement === document.getElementById("canvas1"))
+	  	  this.spiderman.change_web();
+	  })
 
 	  // JOSH - Implement Minsoo's smooth motion
 	  this.movement_directions = { forward: false, backward: false, left: false, right: false };
@@ -196,7 +207,6 @@ class Assignment_Four_Scene extends Scene_Component
     	this.key_triggered_button( "Bird's-Eye View", [ "m" ], () => { this.spiderman.camera_toggle_birdseye(); } );
 		this.key_triggered_button( "Look forward", ["v"], () => { this.spiderman.camera_look_forward(); } );
 		this.key_triggered_button( "Jump", [ " " ], () => { this.spiderman.jump(); } );
-		this.key_triggered_button( "Shoot Web", [ "x" ], () => {this.spiderman.change_web(); } );
     }
     display( graphics_state )
     { graphics_state.lights = this.lights;        // Use the lights stored in this.lights.
@@ -296,43 +306,48 @@ class Assignment_Four_Scene extends Scene_Component
 
 	  // JOSH - Use model transform stored in Spiderman object.
 	  const spidermanPosMatrix = this.spiderman.model_transform.times(Mat4.scale([.5,1,1]));
-// 	  this.spiderman.update();
-	  this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
 
-	  
-	  //JUSTIN - turn gravity on
-	  //this.spiderman.get_position();
+	  // Check if Spiderman swings into a building and update contact status accordingly
+	  if (!this.spiderman.contact) {
+		if (this.spiderman.webbed) {
+		  let check_collision = {body: {positions: this.shapes.spiderman.positions, transform: spidermanPosMatrix}};
+		  this.spiderman.change_contact(!this.collisionManager.tryMoveSpiderman(check_collision));
+		}
+	  }
+	
+      // Update Spiderman's transform and draw
+	  if (!this.spiderman.camera.inBirdsEye) {
+	  	this.spiderman.physics_update();
+	  	this.shapes.spiderman.draw( graphics_state, spidermanPosMatrix.times(Mat4.translation([0,0,0])), this.materials.tan);
+	  }
+	  else {
+	  	let scale = 1.3+0.25*Math.cos(10*t);
+	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(5,6,6).times(scale))), this.materials.pure_red );
+	  	this.shapes.arrow.draw( graphics_state, spidermanPosMatrix.times(Mat4.rotation(Math.PI/2,Vec.of(-1,0,0))).times(Mat4.scale(Vec.of(-5,6,6).times(scale))), this.materials.pure_red );
+      }
 
 	  // Check input and move Spiderman for the next frame
 	  for (let dirString in this.movement_directions) {
 		  if (this.movement_directions[dirString]) {
+		  	// Can SM move in the direction desired input by the keyboard?
 		  	const nextTransform = this.spiderman.simulate_keyboard_move(dirString).times(Mat4.scale([.5,1,1]));
 			const nextSpidermanShape = {
 				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
 			};
-
 			const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape);
 			
-			// if Spiderman hit a building, stick to the wall
-			const shouldChangeContact = (this.collisionManager.getBuildingThatSpidermanJustHit() != null);
-			this.spiderman.change_contact(shouldChangeContact);
-
-			if (canMove) {
+		    // If hit boundary, highlight it
+		    const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
+		    if (boundaryTransform != null) {
+		  	  this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
+		    }
+		    // Move SM appropriately
+		    if (canMove // Regular collisions
+				  || this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape) ) // Make an exception when SM hits a building
+		    {
 			  this.spiderman.setNextShape(nextSpidermanShape);
-			  this.spiderman.keyboard_move(dirString);
-			}
-			else {
-			  //if hit boundary, highlight it
-			  const boundaryTransform = this.collisionManager.getBoundaryThatSpidermanJustHit();
-			  if (boundaryTransform != null) {
-				this.shapes.boundary.draw( graphics_state, boundaryTransform.times(Mat4.scale([1.01,1.01,1.01])), this.materials.AABB);
-			  }
-			  if (this.collisionManager.tryMoveSpiderman(nextSpidermanShape) // Regular collisions
-					|| this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape)	// If spiderman hits a building
-					|| this.spiderman.model_transform.times(Vec.of(0,0,0,1)) <= 1 ) { // If spiderman is at or below ground; y_ground = 1 = Mat4.translation([0,1,0]).times(Vec.of(0,0,0,1))[1]
-			    this.spiderman.setNextShape(nextSpidermanShape);
-			    this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building or is attempting to go below ground
-			  }
+			  this.spiderman.keyboard_move(dirString);	// spiderman.keyboard_move will handle cases where spiderman hits a building
+		    }
 			  /*
 			//TEMP FOR JOSH: demo to color the building spiderman hit as red, if any
 			const buildingTransform = this.collisionManager.findBuildingThatSpidermanHits(nextSpidermanShape);
@@ -342,7 +357,7 @@ class Assignment_Four_Scene extends Scene_Component
 			*/
 			//JOSH demo #2: how to use the function to check if camera is within a building
 			//console.log(this.collisionManager.isCameraWithinBuilding(this.spiderman.camera.locals.camera_PosVec));
-			}
+// 			}
 		 }
 	 }
   }
