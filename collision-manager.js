@@ -172,6 +172,14 @@ class CollisionManager {
     }
   }
 
+  generateCoinAABB(currShape) {
+      const points = currShape.positions;
+      const transform = currShape.transform;
+      const coinAABB = AABB.generateAABBFromPoints(points, transform);
+      this.AABBs.coins.push(coinAABB);
+      this.coinsTransformToAABB[transform] = coinAABB;
+  }
+
   // updates all peoples' AABBs with the translation change of the given matrix. Lets us keep old AABBs and speed up program
   updatePeopleAABBsWithTranslationMatrix(transform) {
     const peopleAABBs = this.AABBs.people;
