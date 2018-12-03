@@ -42,9 +42,24 @@ class CollisionManager {
           ...
         }
       -people: array of all people
-        e.g. just like streetlamps.
+        e.g. [ {
+                //1st lampposts
+                id: 0,
+                pole: { positions: [], transform: Mat4 }, 
+                lightbulb: { positions: [], transform: Mat4 },
+                ...
+              },
+              { 
+                //2nd
+                id: 1,
+                pole: { positions: [], transform: Mat4 }, 
+                lightbulb: { positions: [], transform: Mat4 },
+                ...
+              },
+              ...
+            ]
       -peopleMainSubshapeName: name of the main subshape of a person whose transform would be used to move the entire person
-      -cars: array of all cars. Same format as people (i just wanted 1 relevant ex for justin & daniel each 8D)
+      -cars: array of all cars. Same format as people
       -web: TODO since depends on web being line or not
 
   */
@@ -110,21 +125,37 @@ class CollisionManager {
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
   regeneratePeopleAABBs(peopleShapes, peopleMainSubshapeName) {
-    this.AABBs.people = [];
+    this.AABBs.people = {};
     for (let i=0; i<peopleShapes.length; i++) {
       const currShape = peopleShapes[i];
       const mainTransform = currShape[peopleMainSubshapeName].transform;
-      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape, mainTransform));
+      this.AABBs.people[currShape.id] = AABB.generateAABBFromShapes(currShape, mainTransform);
     }
   }
 
-  // regenerates all cars' AABBs from scratch. carsShapes follows same format as 'cars' in constructor
+  // regenerates all cars' AABBs from scratch. carsShapes follows same format as 'cars' in constructor,
+  //  e.g.        [ {
+  //                 //1st car
+  //                 id: 0,
+  //                 body: { positions: [], transform: Mat4 }, 
+  //                 hood: { positions: [], transform: Mat4 },
+  //                 ...
+  //               },
+  //               { 
+  //                 //2nd car
+  //                 id: 1,
+  //                 body: { positions: [], transform: Mat4 }, 
+  //                 hood: { positions: [], transform: Mat4 },
+  //                 ...
+  //               },
+  //               ...
+  //             ]
   regenerateCarsAABBs(carsShapes, carMainSubshapeName) {
-    this.AABBs.cars = [];
+    this.AABBs.cars = {};
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
       const mainTransform = currShape[carMainSubshapeName].transform;
-      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, mainTransform));
+      this.AABBs.cars[currShape.id] = AABB.generateAABBFromShapes(currShape, mainTransform);
     }
   }
 
@@ -149,52 +180,72 @@ class CollisionManager {
     }
   }
 
-  // returns true if car won't collide with spiderman, other cars, or a person.
+  // returns true if car of the given carID won't collide with spiderman, other cars, or a person.
   // doesnt check anything else since it def won't collide with them
+  // parameters:
+  //  -carShape should be like 
+  //     {
+  //       id: 0,
+  //       body: { positions: [], transform: Mat4 }, 
+  //       hood: { positions: [], transform: Mat4 },
+  //       ...
+  //     },
   tryMoveCar(carShape, carMainSubshapeName) {
     const newCarAABB = AABB.generateAABBFromShapes(carShape, carShape[carMainSubshapeName].transform);
+    const carID = carShape.id;
 
     const carsAABBs = this.AABBs.cars;
-    for (let i=0; i<carsAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+    for (let id in carsAABBs) {
+        if (id == carID) continue;
+        if (!AABB.doAABBsNotIntersect(newCarAABB, carsAABBs[id])) {
             return false;
         }
     }
 
     const peopleAABBs = this.AABBs.people;
-    for (let i=0; i<peopleAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    for (let id in peopleAABBs) {
+        if (!AABB.doAABBsNotIntersect(newCarAABB, peopleAABBs[id])) {
             return false;
         }
     }
 
     const spidermanAABB = this.AABBs.spiderman;
-    if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    if (!AABB.doAABBsNotIntersect(newCarAABB, spidermanAABB)) {
         return false;
     }
   }
 
-  // returns true if person won't collide with spiderman, other cars, or a person.
-  // doesnt check anything else since it def won't collide with them
+  // returns true if person of the given ID won't collide with spiderman, other cars, or a person.
+  // doesnt check anything else since it def won't collide with 
+  // parameters:
+  //  -personShape should be like 
+  //     {
+  //       id: 0,
+  //       body: { positions: [], transform: Mat4 }, 
+  //       arm: { positions: [], transform: Mat4 },
+  //       ...
+  //     },
   tryMovePerson(personShape, personMainSubshapeName) {
     const newPersonAABB = AABB.generateAABBFromShapes(personShape, personShape[personMainSubshapeName].transform);
+    const personID = personShape.id;
 
     const carsAABBs = this.AABBs.cars;
-    for (let i=0; i<carsAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+    for (let id in carsAABBs) {
+        if (!AABB.doAABBsNotIntersect(newPersonAABB, carsAABBs[id])) {
             return false;
         }
     }
 
     const peopleAABBs = this.AABBs.people;
-    for (let i=0; i<peopleAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    for (let id in peopleAABBs) {
+        if (id == personID) continue;
+        if (!AABB.doAABBsNotIntersect(newPersonAABB, peopleAABBs[id])) {
             return false;
         }
     }
 
     const spidermanAABB = this.AABBs.spiderman;
-    if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    if (!AABB.doAABBsNotIntersect(newPersonAABB, spidermanAABB)) {
         return false;
     }
   }
@@ -241,16 +292,16 @@ class CollisionManager {
     }
 
     const carsAABBs = this.AABBs.cars;
-    for (let i=0; i<carsAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+    for (let id in carsAABBs) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[id])) {
             canMove = false;
             break;
         }
     }
 
     const peopleAABBs = this.AABBs.people;
-    for (let i=0; i<peopleAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    for (let id in peopleAABBs) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[id])) {
             canMove = false;
             break;
         }
