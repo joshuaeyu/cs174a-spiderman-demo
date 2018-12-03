@@ -42,21 +42,38 @@ class CollisionManager {
           ...
         }
       -people: array of all people
-        e.g. just like streetlamps.
+        e.g. [ {
+                //1st lampposts
+                id: 0,
+                pole: { positions: [], transform: Mat4 }, 
+                lightbulb: { positions: [], transform: Mat4 },
+                ...
+              },
+              { 
+                //2nd
+                id: 1,
+                pole: { positions: [], transform: Mat4 }, 
+                lightbulb: { positions: [], transform: Mat4 },
+                ...
+              },
+              ...
+            ]
       -peopleMainSubshapeName: name of the main subshape of a person whose transform would be used to move the entire person
-      -cars: array of all cars. Same format as people (i just wanted 1 relevant ex for justin & daniel each 8D)
+      -cars: array of all cars. Same format as people
       -web: TODO since depends on web being line or not
 
   */
-  constructor(boundaries, buildings, lampposts, spiderman, spidermanMainSubshapeName, people, peopleMainSubshapeName, cars, carsMainSubshapeName, web) {
+  constructor(boundaries, buildings, lampposts, spiderman, spidermanMainSubshapeName, people, peopleMainSubshapeName, cars, carsMainSubshapeName, web, coins) {
     // Set up "cache" for extracting exactly what spiderman hits
     this.hitTargetsTransform = {
       boundary: null,
       building: null,
       lamppost: null,
       person: null,
-      car: null
+      car: null,
+      coin: null
     }
+    this.coinsTransformToAABB = {};
 
     //Generate and save all AABBs
     this.AABBs = {};
@@ -87,7 +104,7 @@ class CollisionManager {
     }
 
     //spiderman
-    //this.regenerateSpidermanAABB(spiderman);
+    this.regenerateSpidermanAABB(spiderman, spidermanMainSubshapeName);
 
     //people
     this.regeneratePeopleAABBs(people, peopleMainSubshapeName);
@@ -96,29 +113,62 @@ class CollisionManager {
     this.regenerateCarsAABBs(cars);
 
     //web: todo
+
+    //coins
+    this.regenerateCoinsAABBs(coins);
   }
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
   regenerateSpidermanAABB(spidermanShape, spidermanMainSubshapeName) {
-    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape, spidermanMainSubshapeName);
+    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
   }
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
   regeneratePeopleAABBs(peopleShapes, peopleMainSubshapeName) {
-    this.AABBs.people = [];
+    this.AABBs.people = {};
     for (let i=0; i<peopleShapes.length; i++) {
       const currShape = peopleShapes[i];
       const mainTransform = currShape[peopleMainSubshapeName].transform;
-      this.AABBs.people.push(AABB.generateAABBFromShapes(currShape, mainTransform));
+      this.AABBs.people[currShape.id] = AABB.generateAABBFromShapes(currShape, mainTransform);
     }
   }
 
-  // regenerates all cars' AABBs from scratch. carsShapes follows same format as 'cars' in constructor
+  // regenerates all cars' AABBs from scratch. carsShapes follows same format as 'cars' in constructor,
+  //  e.g.        [ {
+  //                 //1st car
+  //                 id: 0,
+  //                 body: { positions: [], transform: Mat4 }, 
+  //                 hood: { positions: [], transform: Mat4 },
+  //                 ...
+  //               },
+  //               { 
+  //                 //2nd car
+  //                 id: 1,
+  //                 body: { positions: [], transform: Mat4 }, 
+  //                 hood: { positions: [], transform: Mat4 },
+  //                 ...
+  //               },
+  //               ...
+  //             ]
   regenerateCarsAABBs(carsShapes, carMainSubshapeName) {
-    this.AABBs.cars = [];
+    this.AABBs.cars = {};
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
-      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, carMainSubshapeName));
+      const mainTransform = currShape[carMainSubshapeName].transform;
+      this.AABBs.cars[currShape.id] = AABB.generateAABBFromShapes(currShape, mainTransform);
+    }
+  }
+
+  // regenerates all coins' AABBs from scratch.
+  regenerateCoinsAABBs(coinsShapes) {
+    this.AABBs.coins = [];
+    for (let i=0; i<coinsShapes.length; i++) {
+      const currShape = coinsShapes[i];
+      const points = currShape.positions;
+      const transform = currShape.transform;
+      const coinAABB = AABB.generateAABBFromPoints(points, transform);
+      this.AABBs.coins.push(coinAABB);
+      this.coinsTransformToAABB[transform] = coinAABB;
     }
   }
 
@@ -130,15 +180,88 @@ class CollisionManager {
     }
   }
 
+  // returns true if car of the given carID won't collide with spiderman, other cars, or a person.
+  // doesnt check anything else since it def won't collide with them
+  // parameters:
+  //  -carShape should be like 
+  //     {
+  //       id: 0,
+  //       body: { positions: [], transform: Mat4 }, 
+  //       hood: { positions: [], transform: Mat4 },
+  //       ...
+  //     },
+  tryMoveCar(carShape, carMainSubshapeName) {
+    const newCarAABB = AABB.generateAABBFromShapes(carShape, carShape[carMainSubshapeName].transform);
+    const carID = carShape.id;
+
+    const carsAABBs = this.AABBs.cars;
+    for (let id in carsAABBs) {
+        if (id == carID) continue;
+        if (!AABB.doAABBsNotIntersect(newCarAABB, carsAABBs[id])) {
+            return false;
+        }
+    }
+
+    const peopleAABBs = this.AABBs.people;
+    for (let id in peopleAABBs) {
+        if (!AABB.doAABBsNotIntersect(newCarAABB, peopleAABBs[id])) {
+            return false;
+        }
+    }
+
+    const spidermanAABB = this.AABBs.spiderman;
+    if (!AABB.doAABBsNotIntersect(newCarAABB, spidermanAABB)) {
+        return false;
+    }
+    return true;
+  }
+
+  // returns true if person of the given ID won't collide with spiderman, other cars, or a person.
+  // doesnt check anything else since it def won't collide with 
+  // parameters:
+  //  -personShape should be like 
+  //     {
+  //       id: 0,
+  //       body: { positions: [], transform: Mat4 }, 
+  //       arm: { positions: [], transform: Mat4 },
+  //       ...
+  //     },
+  tryMovePerson(personShape, personMainSubshapeName) {
+    const newPersonAABB = AABB.generateAABBFromShapes(personShape, personShape[personMainSubshapeName].transform);
+    const personID = personShape.id;
+
+    const carsAABBs = this.AABBs.cars;
+    for (let id in carsAABBs) {
+        if (!AABB.doAABBsNotIntersect(newPersonAABB, carsAABBs[id])) {
+            return false;
+        }
+    }
+
+    const peopleAABBs = this.AABBs.people;
+    for (let id in peopleAABBs) {
+        if (id == personID) continue;
+        if (!AABB.doAABBsNotIntersect(newPersonAABB, peopleAABBs[id])) {
+            return false;
+        }
+    }
+
+    const spidermanAABB = this.AABBs.spiderman;
+    if (!AABB.doAABBsNotIntersect(newPersonAABB, spidermanAABB)) {
+        return false;
+    }
+    return true;
+  }
+
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
-  tryMoveSpiderman(spidermanShape) {
-    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+  tryMoveSpiderman(spidermanShape, spidermanMainSubshapeName) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
     this.hitTargetsTransform = {
       boundary: null,
       building: null,
       lamppost: null,
       person: null,
-      car: null
+      car: null,
+      coin: null
     };
     let canMove = true;
 
@@ -171,16 +294,27 @@ class CollisionManager {
     }
 
     const carsAABBs = this.AABBs.cars;
-    for (let i=0; i<carsAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+    for (let id in carsAABBs) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[id])) {
             canMove = false;
+            break;
         }
     }
 
     const peopleAABBs = this.AABBs.people;
-    for (let i=0; i<peopleAABBs.length; i++) {
-        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+    for (let id in peopleAABBs) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[id])) {
             canMove = false;
+            break;
+        }
+    }
+
+    const coinsAABBs = this.AABBs.coins;
+    for (let i=0; i<coinsAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, coinsAABBs[i])) {
+            canMove = false;
+            this.hitTargetsTransform.coin = coinsAABBs[i].baseMatrix;
+            break;
         }
     }
 
@@ -204,8 +338,8 @@ class CollisionManager {
   }
 
   // returns the transform matrix of the building spiderman is hitting. if none, returns null
-  findBuildingThatSpidermanHits(spidermanShape) {
-    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+  findBuildingThatSpidermanHits(spidermanShape, spidermanMainSubshapeName) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
     let buildingTransform = null;
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {
@@ -230,11 +364,22 @@ class CollisionManager {
     return this.hitTargetsTransform.building;
   }
 
-  tryMovePerson(personShape) {
-    return true;
+  // gets the transform matrix of the coin spiderman last hit. if none, returns null.
+  // should be called after tryMoveSpiderman() to be useful
+  getCoinThatSpidermanJustHit() {
+    return this.hitTargetsTransform.coin;
   }
 
-  tryMoveCar(carShape) {
-    return true;
+  // removes the coin AABB with baseMatrix == the given transform
+  removeCoinAABB(transform) {
+    const index = this.AABBs.coins.findIndex(function(aabb) {
+      return aabb.baseMatrix.equals(transform);
+    });
+    if (index > -1) {
+      this.AABBs.coins.splice(index, 1);
+    }
+    else {
+      console.log("Error in collision-manager: coin AABB map inconsistent with transforms");
+    }
   }
 }

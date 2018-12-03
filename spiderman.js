@@ -55,7 +55,7 @@ class Spiderman
       case ("left"):     rotation_mult = 1; break;
       case ("right"):    rotation_mult = 3; break;
     }
-    let building_transform = this.collisionManager.findBuildingThatSpidermanHits( this.nextShape );
+    let building_transform = this.collisionManager.findBuildingThatSpidermanHits( this.nextShape, "body" );
     // GROUND MOVEMENT
     if ( building_transform === null && !this.contact ) 
     {  
