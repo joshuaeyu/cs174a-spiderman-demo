@@ -4,7 +4,7 @@ class Assignment_Four_Scene extends Scene_Component
     { super(   context, control_box );    // First, include a secondary Scene that provides movement controls:
 
       const r = context.width/context.height;
-      console.log(r);
+      //console.log(r);
       context.globals.graphics_state.projection_transform = Mat4.perspective( Math.PI/4, r, .1, 1000 );
 
       const shapes = {
@@ -79,7 +79,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  // ================= GLADYS - generate world & buildings statically, since they'll never change.
 
 	  // Initialize game
-	  const numCoins = 3;
+	  const numCoins = 15;
 	  this.coinCounter = new CoinCounter(numCoins);
 
 	  // generate world with inputted size
@@ -259,16 +259,18 @@ class Assignment_Four_Scene extends Scene_Component
 	  // draw all coins
 	  const coinTransforms = allWorldTransforms.coins;
 	  for (let i=0; i<coinTransforms.length; i++) {
-	  	const transform = coinTransforms[i];
-			//.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
-			//.times(Mat4.translation([0,Math.cos(t)/4,0]));
+	  	const transform = coinTransforms[i]
+			.times(Mat4.rotation(Math.PI*t/2, Vec.of(0,1,0)))
+			.times(Mat4.translation([0,Math.cos(2*t)/4,0]));
 	 	this.shapes.coin.draw( graphics_state, transform, this.materials.coin);	
 	  }
+ 	 /*
  	 // For debugging: draw coins' AABBs
 	 const coinsAABBs = this.collisionManager.AABBs.coins;
 	 for (let i=0; i<coinsAABBs.length; i++) {
 	 	this.shapes.AABB.draw( graphics_state, coinsAABBs[i].getTransformMatrix(), this.materials.AABB);
 	 }
+	 */
 	  
      // Draw all people
      var peopleArray = [];
@@ -318,12 +320,13 @@ class Assignment_Four_Scene extends Scene_Component
 //		this.cars[i].move(carTranslateMatrix, wheelRotationMatrix);
 
 	 }	 
-
+	 /*
 	 // For debugging: draw peoples' AABBs
 	 const peopleAABBs = this.collisionManager.AABBs.people;
 	 for (let i=0; i<peopleAABBs.length; i++) {
 	 	this.shapes.AABB.draw( graphics_state, peopleAABBs[i].getTransformMatrix(), this.materials.AABB);
 	 }
+	 */
 
 	  // GLADYS - draw justin's lamppost
 	  const lampTransforms = allWorldTransforms.lampposts;

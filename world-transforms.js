@@ -53,7 +53,7 @@ class WorldTransforms {
     // coin generation parameters
     const coinOffset = 3;
     const coinMinHeight = 1.5;
-    const coinMaxHeight = 1.5;
+    const coinMaxHeight = buildingMaxHeight;
     const assumedLampSize = 3;
 
     // world's grid code. Add your objects here, within a cell or something!
