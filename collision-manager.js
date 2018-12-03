@@ -105,7 +105,7 @@ class CollisionManager {
 
   // regenerates spiderman's AABB from scratch. spidermanShape follows same format as 'spiderman' in constructor
   regenerateSpidermanAABB(spidermanShape, spidermanMainSubshapeName) {
-    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape, spidermanMainSubshapeName);
+    this.AABBs.spiderman = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
   }
 
   // regenerates all peoples' AABBs from scratch. peopleShapes follows same format as 'people' in constructor
@@ -123,7 +123,8 @@ class CollisionManager {
     this.AABBs.cars = [];
     for (let i=0; i<carsShapes.length; i++) {
       const currShape = carsShapes[i];
-      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, carMainSubshapeName));
+      const mainTransform = currShape[carMainSubshapeName].transform;
+      this.AABBs.cars.push(AABB.generateAABBFromShapes(currShape, mainTransform));
     }
   }
 
@@ -150,8 +151,8 @@ class CollisionManager {
 
   // returns true if car won't collide with spiderman, other cars, or a person.
   // doesnt check anything else since it def won't collide with them
-  tryMoveCar(carShape) {
-    const newCarAABB = AABB.generateAABBFromShapes(carShape);
+  tryMoveCar(carShape, carMainSubshapeName) {
+    const newCarAABB = AABB.generateAABBFromShapes(carShape, carShape[carMainSubshapeName].transform);
 
     const carsAABBs = this.AABBs.cars;
     for (let i=0; i<carsAABBs.length; i++) {
@@ -173,13 +174,34 @@ class CollisionManager {
     }
   }
 
-  tryMovePerson(personShape) {
-    //todo
+  // returns true if person won't collide with spiderman, other cars, or a person.
+  // doesnt check anything else since it def won't collide with them
+  tryMovePerson(personShape, personMainSubshapeName) {
+    const newPersonAABB = AABB.generateAABBFromShapes(personShape, personShape[personMainSubshapeName].transform);
+
+    const carsAABBs = this.AABBs.cars;
+    for (let i=0; i<carsAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, carsAABBs[i])) {
+            return false;
+        }
+    }
+
+    const peopleAABBs = this.AABBs.people;
+    for (let i=0; i<peopleAABBs.length; i++) {
+        if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+            return false;
+        }
+    }
+
+    const spidermanAABB = this.AABBs.spiderman;
+    if (!AABB.doAABBsNotIntersect(newSpidermanAABB, peopleAABBs[i])) {
+        return false;
+    }
   }
 
   // returns true if the spiderman shape (encoded w/ a transform) won't collide with anything
-  tryMoveSpiderman(spidermanShape) {
-    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+  tryMoveSpiderman(spidermanShape, spidermanMainSubshapeName) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
     this.hitTargetsTransform = {
       boundary: null,
       building: null,
@@ -263,8 +285,8 @@ class CollisionManager {
   }
 
   // returns the transform matrix of the building spiderman is hitting. if none, returns null
-  findBuildingThatSpidermanHits(spidermanShape) {
-    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape);
+  findBuildingThatSpidermanHits(spidermanShape, spidermanMainSubshapeName) {
+    const newSpidermanAABB = AABB.generateAABBFromShapes(spidermanShape, spidermanShape[spidermanMainSubshapeName].transform);
     let buildingTransform = null;
     const buildingAABBs = this.AABBs.buildings;
     for (let i=0; i<buildingAABBs.length; i++) {

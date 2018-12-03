@@ -211,7 +211,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  for the details.
 	  */
 	  
-	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", peopleArray, "torso", carArray, "car", null, coinShapes); 
+	  this.collisionManager = new CollisionManager(boundaryShapes, buildingShapes, lampShapes, spidermanShape, "body", [], "torso", [], "car", null, coinShapes); 
 
 	  // ============= end of static world generation
 
@@ -353,7 +353,7 @@ class Assignment_Four_Scene extends Scene_Component
 	  var count = 0;
 	  if (count == 0)	
 	  {
-		this.collisionManager.regenerateCarsAABBs(carArray);
+		this.collisionManager.regenerateCarsAABBs(carArray, "car");
 		this.collisionManager.regeneratePeopleAABBs(peopleArray, "body"); 
 	 	//this.collisionManager.updatePeopleAABBsWithTranslationMatrix(peopleTranslateMatrix); //Gladys' faster AABB for translations ONLY
 	 	 count++;
@@ -372,7 +372,7 @@ class Assignment_Four_Scene extends Scene_Component
 				body: { positions: this.shapes.spiderman.positions, transform: nextTransform }
 			};
 
-			const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape);
+			const canMove = this.collisionManager.tryMoveSpiderman(nextSpidermanShape, "body");
 			
 			// if Spiderman hit a building, stick to the wall
 			const shouldChangeContact = (this.collisionManager.getBuildingThatSpidermanJustHit() != null);
