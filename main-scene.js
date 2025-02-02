@@ -40,11 +40,11 @@ class Assignment_Four_Scene extends Scene_Component
       	green: context.get_instance( Phong_Shader ).material( Color.of (0.18,0.55,0.34,1) ),
       	AABB:  context.get_instance( Phong_Shader ).material( Color.of( 1,0,0,0.25) ),
       	buildings: [
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/1.png", true) } ),
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/2.png", true) } ),
-			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/buildings/3.png", true) } )	
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 0.8, texture: context.get_instance("assets/textures/buildings/1.png", true) } ),
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 0.8, texture: context.get_instance("assets/textures/buildings/2.png", true) } ),
+			context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 0.8, texture: context.get_instance("assets/textures/buildings/3.png", true) } )	
       	],
-      	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/ground.png", true) }),
+      	ground: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 0.8, texture: context.get_instance("assets/textures/ground.png", true) }),
       	sky: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-solid.png", true) }),
       	skyWall: context.get_instance( Phong_Shader ).material( Color.of( 0,0,0,1 ), { ambient: 1, texture: context.get_instance("assets/textures/sky-wall.png", true) }),
       	invisible: context.get_instance( Phong_Shader ).material( Color.of( 0,1,0,0.1 ) ),
@@ -52,7 +52,10 @@ class Assignment_Four_Scene extends Scene_Component
       	spider_design: context.get_instance( Phong_Shader ).material( Color.of(0,0,0,1), {ambient: 1, texture: context.get_instance("assets/textures/spiderLogo.png", true)})
       }
 
-	  this.lights = [ new Light( Vec.of( 0,50,0,1 ), Color.of( 0,1,1,1 ), 100000 ) ];
+	  this.lights = [ 
+		new Light( Vec.of( 0,50,0,1 ), Color.of( 1,1,1,1 ), 100000 ),
+		new Light( Vec.of( 0,0,0,1 ), Color.of( 0,0,0,1 ), 1 ) 	// Dummy light due to Phong fragment shader implementation
+ 	  ];
 
 	  //JUSTIN - sounds
 	  this.sounds = {web: new Audio("assets/sounds/web.wav"),
