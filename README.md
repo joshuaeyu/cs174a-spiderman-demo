@@ -1,3 +1,7 @@
+### CS 174A Final Project - Spider-Man Minigame!
+
+This was my group's final project submission for *COM SCI 174A: Introduction to Computer Graphics* at UCLA in Fall 2018. We implemented physics, swinging and wall-climbing mechanics, collision detection, audio, and player/camera controls on top of the basic WebGL-based graphics library that was provided by the course.
+
 # term-project-group-17
 
 Our project is a playable game that allows a player to explore a city as Spider-Man. 
@@ -6,23 +10,22 @@ He can also collect coins scattered around the map.
 Our advanced topics were implementing physics, collision detection, and scene graphs.
 
 The work breakdown was as follows: 
-Justin Lee - physics engine, jumping, gravity, swinging, web, sounds
-Gladys Ng - collision detection (bounding boxes), coins, building generation, texture mapping, object placement, game aspect
-Daniel Park - scene graphs, smoothing out movement, car/people design, collisions involving cars/people,
-movement of cars/people, world design
-Joshua Yu - physics engine, player movement/control, camera movement/control, climbing/sticking to walls, bird's-eye view
+ - Justin Lee - physics engine, jumping, gravity, swinging, web, sounds
+ - Gladys Ng - collision detection (bounding boxes), coins, building generation, texture mapping, object placement, game aspect
+ - Daniel Park - scene graphs, smoothing out movement, car/people design, collisions involving cars/people, movement of cars/people, world design
+ - Joshua Yu - physics engine, player movement/control, camera movement/control, climbing/sticking to walls, bird's-eye view
 
-Keyboard inputs control Spider-Man’s movements while the mouse controls which direction he is facing. 
-Controls: 
-    "w" - grounded: move forward (relative to camera orientation); on wall: move upward
-    "a" - grounded: move left (relative to camera orientation); on wall: move left
-    "s" - grounded: move backward (relative to camera orientation); on wall: move downward
-    "d" - grounded: move right (relative to camera orientation); on wall: move right
-    spacebar - jump
-    click and hold - while airborne, shoot web and swing (release to retract web)
-    "m" - toggle bird's-eye view of world
-    "v" - reset camera view to face forward
-    "h" - reset Spider-Man back to spawnpoint
-    esc - release pointer from game
+Keyboard inputs control Spider-Man’s movements while the mouse controls which direction he is facing. Controls:
+    
+ - "w" - grounded: move forward (relative to camera orientation); on wall: move upward
+ - "a" - grounded: move left (relative to camera orientation); on wall: - move left
+ - "s" - grounded: move backward (relative to camera orientation); on wall: move downward
+ - "d" - grounded: move right (relative to camera orientation); on wall: move right
+ - spacebar - jump
+ - click and hold - while airborne, shoot web and swing (release to retract web)
+ - "m" - toggle bird's-eye view of world
+ - "v" - reset camera view to face forward
+ - "h" - reset Spider-Man back to spawnpoint
+ - esc - release pointer from game
 
 To play, simply run host.command or host.bat, then navigate to localhost:8000 in Google Chrome.
